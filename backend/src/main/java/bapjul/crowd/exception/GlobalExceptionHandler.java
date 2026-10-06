@@ -1,5 +1,8 @@
 package bapjul.crowd.exception;
 
+import bapjul.auth.exception.DuplicateUserException;
+import bapjul.auth.exception.InvalidCredentialsException;
+
 import bapjul.restaurant.exception.RestaurantNotFoundException;
 
 import org.springframework.http.HttpStatus;
@@ -43,4 +46,34 @@ public class GlobalExceptionHandler {
                         )
                 );
     }
+
+    @ExceptionHandler(DuplicateUserException.class)
+public ResponseEntity<Map<String, String>>
+handleDuplicateUser(
+        DuplicateUserException e
+) {
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(
+                    Map.of(
+                            "message",
+                            e.getMessage()
+                    )
+            );
+}
+
+@ExceptionHandler(InvalidCredentialsException.class)
+public ResponseEntity<Map<String, String>>
+handleInvalidCredentials(
+        InvalidCredentialsException e
+) {
+    return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(
+                    Map.of(
+                            "message",
+                            e.getMessage()
+                    )
+            );
+}
 }
