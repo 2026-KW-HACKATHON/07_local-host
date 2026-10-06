@@ -1,5 +1,6 @@
 package bapjul.restaurant.domain;
 
+import bapjul.user.domain.User;
 import jakarta.persistence.*;
 
 import java.time.LocalTime;
@@ -24,8 +25,9 @@ public class Restaurant {
     @Column(name = "closing_time")
     private LocalTime closingTime;
 
-    @Column(name = "owner_id")
-    private Long ownerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
 
     protected Restaurant() {
     }
@@ -35,13 +37,13 @@ public class Restaurant {
             String address,
             LocalTime openingTime,
             LocalTime closingTime,
-            Long ownerId
+            User owner
     ) {
         this.name = name;
         this.address = address;
         this.openingTime = openingTime;
         this.closingTime = closingTime;
-        this.ownerId = ownerId;
+        this.owner = owner;
     }
 
     public void update(
@@ -76,7 +78,7 @@ public class Restaurant {
         return closingTime;
     }
 
-    public Long getOwnerId() {
-        return ownerId;
+    public User getOwner() {
+        return owner;
     }
 }

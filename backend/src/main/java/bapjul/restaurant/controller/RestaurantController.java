@@ -5,6 +5,7 @@ import bapjul.restaurant.dto.RestaurantResponse;
 import bapjul.restaurant.dto.RestaurantUpdateRequest;
 import bapjul.restaurant.service.RestaurantService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,9 +24,13 @@ public class RestaurantController {
 
     @PostMapping
     public RestaurantResponse createRestaurant(
-            @Valid @RequestBody RestaurantCreateRequest request
+            @Valid @RequestBody RestaurantCreateRequest request,
+            Authentication authentication
     ) {
-        return restaurantService.createRestaurant(request);
+        return restaurantService.createRestaurant(
+                request,
+                authentication.getName()
+        );
     }
 
     @GetMapping
@@ -37,17 +42,21 @@ public class RestaurantController {
     public RestaurantResponse getRestaurant(
             @PathVariable Long restaurantId
     ) {
-        return restaurantService.getRestaurant(restaurantId);
+        return restaurantService.getRestaurant(
+                restaurantId
+        );
     }
 
     @PutMapping("/{restaurantId}")
     public RestaurantResponse updateRestaurant(
             @PathVariable Long restaurantId,
-            @Valid @RequestBody RestaurantUpdateRequest request
+            @Valid @RequestBody RestaurantUpdateRequest request,
+            Authentication authentication
     ) {
         return restaurantService.updateRestaurant(
                 restaurantId,
-                request
+                request,
+                authentication.getName()
         );
     }
 }

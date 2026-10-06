@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 
+import bapjul.restaurant.exception.RestaurantAccessDeniedException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -69,6 +71,21 @@ handleInvalidCredentials(
 ) {
     return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
+            .body(
+                    Map.of(
+                            "message",
+                            e.getMessage()
+                    )
+            );
+}
+@ExceptionHandler(RestaurantAccessDeniedException.class)
+public ResponseEntity<Map<String, String>>
+handleRestaurantAccessDenied(
+        RestaurantAccessDeniedException e
+) {
+
+    return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
             .body(
                     Map.of(
                             "message",

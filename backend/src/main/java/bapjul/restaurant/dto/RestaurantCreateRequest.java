@@ -14,8 +14,6 @@ public record RestaurantCreateRequest(
 
         LocalTime openingTime,
 
-        LocalTime closingTime,
-
-        Long ownerId
+        LocalTime closingTime
 ) {
 }
