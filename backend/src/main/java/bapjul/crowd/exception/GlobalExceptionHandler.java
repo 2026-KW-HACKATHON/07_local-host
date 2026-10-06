@@ -1,5 +1,7 @@
 package bapjul.crowd.exception;
 
+import bapjul.restaurant.exception.RestaurantNotFoundException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,12 +12,26 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(
-            CrowdDataNotFoundException.class
-    )
+    @ExceptionHandler(CrowdDataNotFoundException.class)
     public ResponseEntity<Map<String, String>>
     handleCrowdDataNotFound(
             CrowdDataNotFoundException e
+    ) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(
+                        Map.of(
+                                "message",
+                                e.getMessage()
+                        )
+                );
+    }
+
+    @ExceptionHandler(RestaurantNotFoundException.class)
+    public ResponseEntity<Map<String, String>>
+    handleRestaurantNotFound(
+            RestaurantNotFoundException e
     ) {
 
         return ResponseEntity

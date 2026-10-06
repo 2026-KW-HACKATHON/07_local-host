@@ -1,0 +1,21 @@
+package bapjul.restaurant.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+import java.time.LocalTime;
+
+public record RestaurantCreateRequest(
+
+        @NotBlank
+        String name,
+
+        @NotBlank
+        String address,
+
+        LocalTime openingTime,
+
+        LocalTime closingTime,
+
+        Long ownerId
+) {
+}
