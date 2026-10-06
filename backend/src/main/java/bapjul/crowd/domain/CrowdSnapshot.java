@@ -1,5 +1,7 @@
 package bapjul.crowd.domain;
 
+import bapjul.restaurant.domain.Restaurant;
+import bapjul.user.domain.User;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -20,35 +22,53 @@ public class CrowdSnapshot {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "restaurant_id", nullable = false)
-    private Long restaurantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "restaurant_id",
+            nullable = false
+    )
+    private Restaurant restaurant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "reporter_id",
+            nullable = false
+    )
+    private User reporter;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CrowdLevel level;
 
-    @Column(name = "observed_at", nullable = false)
+    @Column(
+            name = "observed_at",
+            nullable = false
+    )
     private LocalDateTime observedAt;
 
     protected CrowdSnapshot() {
     }
 
     public CrowdSnapshot(
-            Long restaurantId,
+            Restaurant restaurant,
+            User reporter,
             CrowdLevel level,
             LocalDateTime observedAt
     ) {
-        this.restaurantId = restaurantId;
+        this.restaurant = restaurant;
+        this.reporter = reporter;
         this.level = level;
         this.observedAt = observedAt;
     }
 
     public static CrowdSnapshot create(
-            Long restaurantId,
+            Restaurant restaurant,
+            User reporter,
             CrowdLevel level
     ) {
         return new CrowdSnapshot(
-                restaurantId,
+                restaurant,
+                reporter,
                 level,
                 LocalDateTime.now()
         );
@@ -58,8 +78,12 @@ public class CrowdSnapshot {
         return id;
     }
 
-    public Long getRestaurantId() {
-        return restaurantId;
+    public Restaurant getRestaurant() {
+        return restaurant;
+    }
+
+    public User getReporter() {
+        return reporter;
     }
 
     public CrowdLevel getLevel() {

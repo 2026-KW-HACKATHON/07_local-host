@@ -14,6 +14,8 @@ import java.util.Map;
 
 import bapjul.restaurant.exception.RestaurantAccessDeniedException;
 
+import bapjul.crowd.exception.InvalidCrowdReportException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -86,6 +88,21 @@ handleRestaurantAccessDenied(
 
     return ResponseEntity
             .status(HttpStatus.FORBIDDEN)
+            .body(
+                    Map.of(
+                            "message",
+                            e.getMessage()
+                    )
+            );
+}
+@ExceptionHandler(InvalidCrowdReportException.class)
+public ResponseEntity<Map<String, String>>
+handleInvalidCrowdReport(
+        InvalidCrowdReportException e
+) {
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
             .body(
                     Map.of(
                             "message",

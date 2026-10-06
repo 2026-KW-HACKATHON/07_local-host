@@ -1,14 +1,14 @@
 package bapjul.crowd.controller;
 
 import bapjul.crowd.dto.CrowdChartResponse;
+import bapjul.crowd.dto.CrowdReportResponse;
 import bapjul.crowd.dto.CrowdStatusResponse;
 import bapjul.crowd.dto.CrowdStatusUpdateRequest;
 import bapjul.crowd.service.CrowdService;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,63 +25,38 @@ public class CrowdController {
         this.crowdService = crowdService;
     }
 
-    /*
-     * 혼잡도 제보
-     *
-     * POST /api/restaurants/1/crowd
-     */
     @PostMapping("/{restaurantId}/crowd")
-    public CrowdStatusResponse saveStatus(
-
-            @PathVariable
-            Long restaurantId,
-
+    public CrowdReportResponse saveStatus(
+            @PathVariable Long restaurantId,
             @Valid
             @RequestBody
-            CrowdStatusUpdateRequest request
+            CrowdStatusUpdateRequest request,
+            Authentication authentication
     ) {
-
         return crowdService.saveStatus(
                 restaurantId,
-                request
+                request,
+                authentication.getName()
         );
     }
 
-    /*
-     * 현재 혼잡도 조회
-     *
-     * GET /api/restaurants/1/crowd
-     */
     @GetMapping("/{restaurantId}/crowd")
     public CrowdStatusResponse getCurrentStatus(
-
-            @PathVariable
-            Long restaurantId
+            @PathVariable Long restaurantId
     ) {
-
-        return crowdService
-                .getCurrentStatus(
-                        restaurantId
-                );
+        return crowdService.getCurrentStatus(
+                restaurantId
+        );
     }
 
-    /*
-     * 혼잡도 차트 조회
-     *
-     * GET /api/restaurants/1/crowd/chart?hours=12
-     */
     @GetMapping("/{restaurantId}/crowd/chart")
     public CrowdChartResponse getChart(
-
-            @PathVariable
-            Long restaurantId,
-
+            @PathVariable Long restaurantId,
             @RequestParam(defaultValue = "12")
             @Min(1)
             @Max(168)
             int hours
     ) {
-
         return crowdService.getChart(
                 restaurantId,
                 hours

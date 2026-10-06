@@ -52,6 +52,10 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/api/auth/me"
                 ).authenticated()
+                .requestMatchers(
+                    HttpMethod.POST,
+                    "/api/restaurants/*/crowd"
+                ).authenticated()
 
                 .requestMatchers(
                         HttpMethod.GET,
@@ -78,4 +82,5 @@ public class SecurityConfig {
 
         return http.build();
     }
+    
 }

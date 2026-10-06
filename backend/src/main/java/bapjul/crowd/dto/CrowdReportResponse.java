@@ -4,12 +4,12 @@ import bapjul.crowd.domain.CrowdLevel;
 
 import java.time.LocalDateTime;
 
-public record CrowdStatusResponse(
+public record CrowdReportResponse(
+        Long id,
         Long restaurantId,
+        Long reporterId,
         CrowdLevel level,
         String label,
-        int score,
-        int reportCount,
-        LocalDateTime updatedAt
+        LocalDateTime reportedAt
 ) {
 }

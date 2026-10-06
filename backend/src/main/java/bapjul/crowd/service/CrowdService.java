@@ -4,11 +4,16 @@ import bapjul.crowd.domain.CrowdLevel;
 import bapjul.crowd.domain.CrowdSnapshot;
 import bapjul.crowd.dto.CrowdChartPoint;
 import bapjul.crowd.dto.CrowdChartResponse;
+import bapjul.crowd.dto.CrowdReportResponse;
 import bapjul.crowd.dto.CrowdStatusResponse;
 import bapjul.crowd.dto.CrowdStatusUpdateRequest;
-import bapjul.crowd.exception.CrowdDataNotFoundException;
+import bapjul.crowd.exception.InvalidCrowdReportException;
 import bapjul.crowd.repository.CrowdSnapshotRepository;
-
+import bapjul.restaurant.domain.Restaurant;
+import bapjul.restaurant.exception.RestaurantNotFoundException;
+import bapjul.restaurant.repository.RestaurantRepository;
+import bapjul.user.domain.User;
+import bapjul.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,63 +30,130 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CrowdService {
 
+    private static final int RECENT_MINUTES = 30;
+
     private final CrowdSnapshotRepository repository;
+    private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
 
     public CrowdService(
-            CrowdSnapshotRepository repository
+            CrowdSnapshotRepository repository,
+            RestaurantRepository restaurantRepository,
+            UserRepository userRepository
     ) {
         this.repository = repository;
+        this.restaurantRepository = restaurantRepository;
+        this.userRepository = userRepository;
     }
 
-    /*
-     * 혼잡도 제보 저장
-     */
     @Transactional
-    public CrowdStatusResponse saveStatus(
+    public CrowdReportResponse saveStatus(
             Long restaurantId,
-            CrowdStatusUpdateRequest request
+            CrowdStatusUpdateRequest request,
+            String reporterEmail
     ) {
+
+        if (request.level() == CrowdLevel.UNKNOWN) {
+            throw new InvalidCrowdReportException(
+                    "UNKNOWN 상태는 직접 제보할 수 없습니다."
+            );
+        }
+
+        Restaurant restaurant =
+                restaurantRepository.findById(restaurantId)
+                        .orElseThrow(
+                                () -> new RestaurantNotFoundException(
+                                        "식당을 찾을 수 없습니다."
+                                )
+                        );
+
+        User reporter =
+                userRepository.findByEmail(reporterEmail)
+                        .orElseThrow(
+                                () -> new InvalidCrowdReportException(
+                                        "사용자 정보를 찾을 수 없습니다."
+                                )
+                        );
 
         CrowdSnapshot snapshot =
                 CrowdSnapshot.create(
-                        restaurantId,
+                        restaurant,
+                        reporter,
                         request.level()
                 );
 
         CrowdSnapshot saved =
                 repository.save(snapshot);
 
-        return toStatusResponse(saved);
+        return toReportResponse(saved);
     }
 
-    /*
-     * 가장 최근 혼잡도 조회
-     */
     public CrowdStatusResponse getCurrentStatus(
             Long restaurantId
     ) {
 
-        CrowdSnapshot snapshot =
+        if (!restaurantRepository.existsById(restaurantId)) {
+            throw new RestaurantNotFoundException(
+                    "식당을 찾을 수 없습니다."
+            );
+        }
+
+        LocalDateTime end = LocalDateTime.now();
+
+        LocalDateTime start =
+                end.minusMinutes(RECENT_MINUTES);
+
+        List<CrowdSnapshot> snapshots =
                 repository
-                        .findTopByRestaurantIdOrderByObservedAtDesc(
-                                restaurantId
-                        )
-                        .orElseThrow(
-                                () -> new CrowdDataNotFoundException(
-                                        "해당 식당의 혼잡도 정보가 없습니다."
-                                )
+                        .findByRestaurant_IdAndObservedAtBetweenOrderByObservedAtAsc(
+                                restaurantId,
+                                start,
+                                end
                         );
 
-        return toStatusResponse(snapshot);
+        if (snapshots.isEmpty()) {
+
+            CrowdLevel unknown =
+                    CrowdLevel.UNKNOWN;
+
+            return new CrowdStatusResponse(
+                    restaurantId,
+                    unknown,
+                    unknown.getLabel(),
+                    unknown.getScore(),
+                    0,
+                    null
+            );
+        }
+
+        CrowdLevel representative =
+                findRepresentativeLevel(snapshots);
+
+        LocalDateTime latestTime =
+                snapshots.get(
+                        snapshots.size() - 1
+                ).getObservedAt();
+
+        return new CrowdStatusResponse(
+                restaurantId,
+                representative,
+                representative.getLabel(),
+                representative.getScore(),
+                snapshots.size(),
+                latestTime
+        );
     }
 
-    /*
-     * 최근 N시간의 차트 데이터 조회
-     */
     public CrowdChartResponse getChart(
             Long restaurantId,
             int hours
     ) {
+
+        if (!restaurantRepository.existsById(restaurantId)) {
+            throw new RestaurantNotFoundException(
+                    "식당을 찾을 수 없습니다."
+            );
+        }
 
         LocalDateTime end =
                 LocalDateTime.now();
@@ -91,17 +163,14 @@ public class CrowdService {
 
         List<CrowdSnapshot> snapshots =
                 repository
-                        .findByRestaurantIdAndObservedAtBetweenOrderByObservedAtAsc(
+                        .findByRestaurant_IdAndObservedAtBetweenOrderByObservedAtAsc(
                                 restaurantId,
                                 start,
                                 end
                         );
 
-        /*
-         * 같은 시간대에 들어온 데이터를
-         * 시간별로 묶음
-         */
-        Map<LocalDateTime, List<CrowdSnapshot>> groupedByHour =
+        Map<LocalDateTime, List<CrowdSnapshot>>
+                groupedByHour =
                 snapshots.stream()
                         .collect(
                                 Collectors.groupingBy(
@@ -116,12 +185,8 @@ public class CrowdService {
                                 )
                         );
 
-        /*
-         * 각 시간대별 대표 혼잡도를 선정
-         */
         List<CrowdChartPoint> chartPoints =
-                groupedByHour
-                        .entrySet()
+                groupedByHour.entrySet()
                         .stream()
                         .map(entry -> {
 
@@ -147,12 +212,6 @@ public class CrowdService {
         );
     }
 
-    /*
-     * 한 시간 동안 가장 많이 제보된 상태를
-     * 대표 혼잡도로 선택
-     *
-     * 동률이라면 가장 최근 제보를 사용
-     */
     private CrowdLevel findRepresentativeLevel(
             List<CrowdSnapshot> snapshots
     ) {
@@ -178,11 +237,9 @@ public class CrowdService {
 
         return snapshots.stream()
                 .sorted(
-                        Comparator
-                                .comparing(
-                                        CrowdSnapshot::getObservedAt
-                                )
-                                .reversed()
+                        Comparator.comparing(
+                                CrowdSnapshot::getObservedAt
+                        ).reversed()
                 )
                 .map(CrowdSnapshot::getLevel)
                 .filter(
@@ -196,18 +253,19 @@ public class CrowdService {
                 .orElseThrow();
     }
 
-    private CrowdStatusResponse toStatusResponse(
+    private CrowdReportResponse toReportResponse(
             CrowdSnapshot snapshot
     ) {
 
         CrowdLevel level =
                 snapshot.getLevel();
 
-        return new CrowdStatusResponse(
-                snapshot.getRestaurantId(),
+        return new CrowdReportResponse(
+                snapshot.getId(),
+                snapshot.getRestaurant().getId(),
+                snapshot.getReporter().getId(),
                 level,
                 level.getLabel(),
-                level.getScore(),
                 snapshot.getObservedAt()
         );
     }
