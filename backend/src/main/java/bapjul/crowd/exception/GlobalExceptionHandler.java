@@ -16,6 +16,9 @@ import bapjul.restaurant.exception.RestaurantAccessDeniedException;
 
 import bapjul.crowd.exception.InvalidCrowdReportException;
 
+import bapjul.promotion.exception.InvalidPromotionException;
+import bapjul.promotion.exception.PromotionNotFoundException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -99,6 +102,37 @@ handleRestaurantAccessDenied(
 public ResponseEntity<Map<String, String>>
 handleInvalidCrowdReport(
         InvalidCrowdReportException e
+) {
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(
+                    Map.of(
+                            "message",
+                            e.getMessage()
+                    )
+            );
+}
+@ExceptionHandler(PromotionNotFoundException.class)
+public ResponseEntity<Map<String, String>>
+handlePromotionNotFound(
+        PromotionNotFoundException e
+) {
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(
+                    Map.of(
+                            "message",
+                            e.getMessage()
+                    )
+            );
+}
+
+@ExceptionHandler(InvalidPromotionException.class)
+public ResponseEntity<Map<String, String>>
+handleInvalidPromotion(
+        InvalidPromotionException e
 ) {
 
     return ResponseEntity

@@ -99,14 +99,15 @@ public class RestaurantService {
                                         )
                         );
 
-        if (!restaurant.getOwner()
+        if (restaurant.getOwner() == null ||
+        !restaurant.getOwner()
                 .getEmail()
                 .equals(ownerEmail)) {
 
-            throw new RestaurantAccessDeniedException(
-                    "자신의 식당만 수정할 수 있습니다."
-            );
-        }
+                throw new RestaurantAccessDeniedException(
+                        "자신의 식당 프로모션만 관리할 수 있습니다."
+                );
+                }
 
         restaurant.update(
                 request.name(),

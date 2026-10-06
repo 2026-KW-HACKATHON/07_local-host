@@ -2,6 +2,7 @@ package bapjul.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -9,7 +10,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfig {
@@ -19,8 +19,7 @@ public class SecurityConfig {
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter
     ) {
-        this.jwtAuthenticationFilter =
-                jwtAuthenticationFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -44,36 +43,67 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                .requestMatchers(
-                        "/api/auth/signup",
-                        "/api/auth/login"
-                ).permitAll()
+                        // 회원가입 / 로그인
+                        .requestMatchers(
+                                "/api/auth/signup",
+                                "/api/auth/login"
+                        ).permitAll()
 
-                .requestMatchers(
-                        "/api/auth/me"
-                ).authenticated()
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/restaurants/*/crowd"
-                ).authenticated()
+                        // 내 정보
+                        .requestMatchers(
+                                "/api/auth/me"
+                        ).authenticated()
 
-                .requestMatchers(
-                        HttpMethod.GET,
-                        "/api/restaurants/**"
-                ).permitAll()
+                        // 프로모션 관리 조회
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/restaurants/*/promotions/manage"
+                        ).hasRole("OWNER")
 
-                .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/restaurants"
-                ).hasRole("OWNER")
+                        // 프로모션 생성
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/restaurants/*/promotions"
+                        ).hasRole("OWNER")
 
-                .requestMatchers(
-                        HttpMethod.PUT,
-                        "/api/restaurants/**"
-                ).hasRole("OWNER")
+                        // 프로모션 수정
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/restaurants/*/promotions/*"
+                        ).hasRole("OWNER")
 
-                .anyRequest().permitAll()
-        )
+                        // 프로모션 삭제
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/restaurants/*/promotions/*"
+                        ).hasRole("OWNER")
+
+                        // 혼잡도 제보
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/restaurants/*/crowd"
+                        ).authenticated()
+
+                        // 식당 / 혼잡도 / 프로모션 조회
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/restaurants/**"
+                        ).permitAll()
+
+                        // 식당 생성
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/restaurants"
+                        ).hasRole("OWNER")
+
+                        // 식당 수정
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/restaurants/**"
+                        ).hasRole("OWNER")
+
+                        .anyRequest().permitAll()
+                )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,
@@ -82,5 +112,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-    
 }
