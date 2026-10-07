@@ -21,7 +21,7 @@ import { SignupScreen, type PendingSignup } from './src/screens/SignupScreen';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { TermsScreen } from './src/screens/TermsScreen';
 import { WelcomeScreen } from './src/screens/WelcomeScreen';
-import { RestaurantHomeScreen } from './src/screens/RestaurantHomeScreen';
+import { OwnerScreen } from './src/screens/OwnerScreen';
 import { CustomerScreen } from './src/screens/CustomerScreen';
 
 type ScreenName =
@@ -112,7 +112,7 @@ function BapjulFlow() {
     case 'home':
       return user?.role === 'CUSTOMER'
         ? <CustomerScreen onLogout={() => setScreen('login')} />
-        : <RestaurantHomeScreen onLogout={() => setScreen('login')} />;
+        : <OwnerScreen onLogout={() => setScreen('login')} />;
     case 'terms':
       return (
         <TermsScreen
