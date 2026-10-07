@@ -62,18 +62,31 @@ public class CrowdSnapshot {
     }
 
     public static CrowdSnapshot create(
-            Restaurant restaurant,
-            User reporter,
-            CrowdLevel level
-    ) {
-        return new CrowdSnapshot(
-                restaurant,
-                reporter,
-                level,
-                LocalDateTime.now()
-        );
-    }
+        Restaurant restaurant,
+        User reporter,
+        CrowdLevel level
+) {
+    return new CrowdSnapshot(
+            restaurant,
+            reporter,
+            level,
+            LocalDateTime.now()
+    );
+}
 
+public static CrowdSnapshot create(
+        Restaurant restaurant,
+        User reporter,
+        CrowdLevel level,
+        LocalDateTime observedAt
+) {
+    return new CrowdSnapshot(
+            restaurant,
+            reporter,
+            level,
+            observedAt
+    );
+}
     public Long getId() {
         return id;
     }
