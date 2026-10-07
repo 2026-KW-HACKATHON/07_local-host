@@ -12,9 +12,10 @@ type RoleScreenProps = {
   allowedRole?: UserRole;
   creatingAccount: boolean;
   onSelect: (role: UserRole) => Promise<void>;
+  onBack: () => void;
 };
 
-export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScreenProps) {
+export function RoleScreen({ allowedRole, creatingAccount, onSelect, onBack }: RoleScreenProps) {
   const [loadingRole, setLoadingRole] = useState<UserRole | null>(null);
   const requestInFlight = useRef(false);
 
@@ -45,7 +46,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScree
   const busy = loadingRole !== null;
 
   return (
-    <DesignScreen>
+    <DesignScreen onBack={onBack} backDisabled={busy}>
       <HeaderLogo style={styles.logo} />
       <View style={styles.actions}>
         <FigmaButton

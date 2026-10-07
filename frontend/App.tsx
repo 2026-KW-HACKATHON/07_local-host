@@ -39,20 +39,22 @@ function BapjulFlow() {
   const { bootstrapping, login, signup, user } = useAuth();
   const [screen, setScreen] = useState<ScreenName>('splash');
   const [pendingSignup, setPendingSignup] = useState<PendingSignup | null>(null);
+  const [signupOrigin, setSignupOrigin] = useState<'welcome' | 'login'>('welcome');
+  const [navigationBusy, setNavigationBusy] = useState(false);
+
+  const goBack = useCallback(() => {
+    if (navigationBusy) return true;
+    if (screen === 'role') { setScreen('terms'); return true; }
+    if (screen === 'terms') { setScreen('signup'); return true; }
+    if (screen === 'signup') { setPendingSignup(null); setScreen(signupOrigin); return true; }
+    if (screen === 'login') { setPendingSignup(null); setScreen('welcome'); return true; }
+    return false;
+  }, [navigationBusy, screen, signupOrigin]);
 
   useEffect(() => {
-    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (screen === 'role') { setScreen('terms'); return true; }
-      if (screen === 'terms') { setScreen('signup'); return true; }
-      if (screen === 'signup' || screen === 'login') {
-        setPendingSignup(null);
-        setScreen('welcome');
-        return true;
-      }
-      return false;
-    });
+    const subscription = BackHandler.addEventListener('hardwareBackPress', goBack);
     return () => subscription.remove();
-  }, [screen]);
+  }, [goBack]);
 
   useEffect(() => {
     if (!bootstrapping && screen === 'home' && !user) setScreen('login');
@@ -81,16 +83,18 @@ function BapjulFlow() {
       return (
         <WelcomeScreen
           onLogin={() => setScreen('login')}
-          onSignup={() => setScreen('signup')}
+          onSignup={() => { setSignupOrigin('welcome'); setScreen('signup'); }}
         />
       );
     case 'login':
       return (
         <LoginScreen
-          onSignup={() => setScreen('signup')}
+          onBack={goBack}
+          onSignup={() => { setSignupOrigin('login'); setScreen('signup'); }}
           onLogin={async (email, password) => {
-            await login(email, password);
-            setScreen('home');
+            setNavigationBusy(true);
+            try { await login(email, password); setScreen('home'); }
+            finally { setNavigationBusy(false); }
           }}
         />
       );
@@ -98,6 +102,7 @@ function BapjulFlow() {
       return (
         <SignupScreen
           initialValues={pendingSignup}
+          onBack={goBack}
           onContinue={(signup) => {
             setPendingSignup(signup);
             setScreen('terms');
@@ -111,6 +116,7 @@ function BapjulFlow() {
     case 'terms':
       return (
         <TermsScreen
+          onBack={goBack}
           onContinue={() => {
             if (!pendingSignup) {
               setScreen('signup');
@@ -123,12 +129,15 @@ function BapjulFlow() {
     case 'role':
       return (
         <RoleScreen
+          onBack={goBack}
           allowedRole={pendingSignup ? undefined : user?.role}
           creatingAccount={Boolean(pendingSignup)}
           onSelect={async (role: UserRole) => {
             if (pendingSignup) {
               const account = { ...pendingSignup, role };
-              await signup(account);
+              setNavigationBusy(true);
+              try { await signup(account); }
+              finally { setNavigationBusy(false); }
               setPendingSignup(null);
 
               setScreen('login');

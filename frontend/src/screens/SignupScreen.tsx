@@ -20,9 +20,11 @@ export type PendingSignup = {
 export function SignupScreen({
   onContinue,
   initialValues,
+  onBack,
 }: {
   onContinue: (signup: PendingSignup) => void;
   initialValues?: PendingSignup | null;
+  onBack: () => void;
 }) {
   const [email, setEmail] = useState(initialValues?.email ?? '');
   const [nickname, setNickname] = useState(initialValues?.nickname ?? '');
@@ -68,7 +70,7 @@ export function SignupScreen({
   };
 
   return (
-    <DesignScreen keyboardAware>
+    <DesignScreen keyboardAware onBack={onBack}>
       <HeaderLogo style={styles.logo} />
       <ScreenTitle style={styles.title}>회원가입</ScreenTitle>
       <View style={styles.form}>
@@ -76,7 +78,7 @@ export function SignupScreen({
           keyboardType="email-address"
           onChangeText={setEmail}
           onSubmitEditing={() => nicknameRef.current?.focus()}
-          placeholder="이메일"
+          placeholder="이메일 (로그인 아이디)"
           returnKeyType="next"
           value={email}
         />
@@ -85,7 +87,7 @@ export function SignupScreen({
           inputRef={nicknameRef}
           onChangeText={setNickname}
           onSubmitEditing={() => passwordRef.current?.focus()}
-          placeholder="닉네임"
+          placeholder="닉네임 (앱 표시 이름)"
           returnKeyType="next"
           value={nickname}
         />

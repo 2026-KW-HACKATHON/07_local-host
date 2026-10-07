@@ -1,26 +1,40 @@
 import type { PropsWithChildren } from 'react';
 import {
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
 
-import { colors, metrics } from '../theme/tokens';
+import { colors, fonts, metrics, px } from '../theme/tokens';
 
 type DesignScreenProps = PropsWithChildren<{
   backgroundColor?: string;
   keyboardAware?: boolean;
+  onBack?: () => void;
+  backDisabled?: boolean;
 }>;
 
 export function DesignScreen({
   backgroundColor = colors.white,
   children,
   keyboardAware = false,
+  onBack,
+  backDisabled = false,
 }: DesignScreenProps) {
   const canvas = (
-    <View style={[styles.canvas, keyboardAware && styles.scrollCanvas, { backgroundColor }]}>{children}</View>
+    <View style={[styles.canvas, keyboardAware && styles.scrollCanvas, { backgroundColor }]}>
+      {onBack && <View style={styles.backRow}><Pressable accessibilityRole="button" accessibilityLabel="이전 화면으로 돌아가기"
+        accessibilityState={{ disabled: backDisabled }} disabled={backDisabled}
+        onPress={() => { Keyboard.dismiss(); onBack(); }} style={({ pressed }) => [styles.backButton, (pressed || backDisabled) && styles.dimmed]}>
+        <Text style={styles.backText}>‹ 뒤로</Text>
+      </Pressable></View>}
+      {children}
+    </View>
   );
 
   if (keyboardAware) {
@@ -62,4 +76,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   scrollCanvas: { height: undefined, minHeight: metrics.canvasHeight },
+  backRow: { paddingHorizontal: px(15), paddingTop: px(8) },
+  backButton: { alignSelf: 'flex-start', minWidth: px(80), minHeight: px(44), justifyContent: 'center', paddingHorizontal: px(8) },
+  backText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(18), lineHeight: px(28) },
+  dimmed: { opacity: 0.45 },
 });

@@ -13,7 +13,7 @@ const TERMS = [
   { label: '이벤트 혜택 및 광고성 정보 수신\n  동의 (선택)', required: false },
 ] as const;
 
-export function TermsScreen({ onContinue }: { onContinue: () => void }) {
+export function TermsScreen({ onContinue, onBack }: { onContinue: () => void; onBack: () => void }) {
   const [checked, setChecked] = useState<boolean[]>(TERMS.map(() => false));
 
   const toggle = (index: number) => {
@@ -31,7 +31,7 @@ export function TermsScreen({ onContinue }: { onContinue: () => void }) {
   };
 
   return (
-    <DesignScreen>
+    <DesignScreen onBack={onBack}>
       <Text allowFontScaling={false} style={styles.title}>
         서비스 이용을 위해{`\n`}약관에 동의해 주세요
       </Text>

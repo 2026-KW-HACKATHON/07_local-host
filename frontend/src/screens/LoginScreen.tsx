@@ -14,17 +14,18 @@ import { colors, fonts, px } from '../theme/tokens';
 type LoginScreenProps = {
   onLogin: (email: string, password: string) => Promise<void>;
   onSignup: () => void;
+  onBack: () => void;
 };
 
 function showSocialSetup(provider: 'Google' | '네이버') {
   Alert.alert(
     `${provider} 로그인 설정이 필요해요`,
-    '소셜 로그인은 준비 중이에요. 아이디와 비밀번호로 로그인해 주세요.',
+    '소셜 로그인은 준비 중이에요. 가입한 이메일과 비밀번호로 로그인해 주세요.',
     [{ text: '확인' }],
   );
 }
 
-export function LoginScreen({ onLogin, onSignup }: LoginScreenProps) {
+export function LoginScreen({ onLogin, onSignup, onBack }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,7 @@ export function LoginScreen({ onLogin, onSignup }: LoginScreenProps) {
     } catch (error) {
       Alert.alert(
         '로그인하지 못했어요',
-        error instanceof Error ? error.message : '아이디 또는 비밀번호를 확인해 주세요.',
+        error instanceof Error ? error.message : '이메일 또는 비밀번호를 확인해 주세요.',
         [{ text: '확인' }],
       );
     } finally {
@@ -57,7 +58,7 @@ export function LoginScreen({ onLogin, onSignup }: LoginScreenProps) {
   };
 
   return (
-    <DesignScreen keyboardAware>
+    <DesignScreen keyboardAware onBack={onBack} backDisabled={loading}>
       <HeaderLogo style={styles.logo} />
       <ScreenTitle style={styles.title}>로그인</ScreenTitle>
       <View style={styles.form}>
@@ -65,7 +66,7 @@ export function LoginScreen({ onLogin, onSignup }: LoginScreenProps) {
           keyboardType="email-address"
           onChangeText={setEmail}
           onSubmitEditing={() => passwordRef.current?.focus()}
-          placeholder="이메일"
+          placeholder="이메일 (로그인 아이디)"
           returnKeyType="next"
           value={email}
         />
