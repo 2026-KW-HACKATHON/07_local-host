@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "밥줄",
+    "slug": "bapjul-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "bapjul",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.bapjul.mobile",
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.bapjul.mobile",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "주변 맛집과 매장까지의 거리를 안내하기 위해 위치 권한이 필요합니다."
+        }
+      ],
+      "expo-notifications",
+      "expo-font"
+    ]
+  }
+}
