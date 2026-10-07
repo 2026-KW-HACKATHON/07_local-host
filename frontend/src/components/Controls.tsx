@@ -96,6 +96,7 @@ export function FigmaTextField({
   return (
     <View style={styles.field}>
       <TextInput
+        accessibilityLabel={placeholder}
         allowFontScaling={false}
         autoCapitalize={autoCapitalize}
         autoCorrect={false}
@@ -103,7 +104,7 @@ export function FigmaTextField({
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
-        placeholderTextColor={colors.black}
+        placeholderTextColor={colors.placeholder}
         ref={inputRef}
         returnKeyType={returnKeyType}
         secureTextEntry={secureTextEntry}

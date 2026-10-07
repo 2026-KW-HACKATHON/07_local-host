@@ -20,7 +20,7 @@ export function DesignScreen({
   keyboardAware = false,
 }: DesignScreenProps) {
   const canvas = (
-    <View style={[styles.canvas, { backgroundColor }]}>{children}</View>
+    <View style={[styles.canvas, keyboardAware && styles.scrollCanvas, { backgroundColor }]}>{children}</View>
   );
 
   if (keyboardAware) {
@@ -61,4 +61,5 @@ const styles = StyleSheet.create({
     height: metrics.canvasHeight,
     overflow: 'hidden',
   },
+  scrollCanvas: { height: undefined, minHeight: metrics.canvasHeight },
 });

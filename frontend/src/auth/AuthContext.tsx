@@ -10,8 +10,10 @@ import {
 import type { SignupRequest, User } from '../api/types';
 import { ApiError, setUnauthorizedHandler } from '../api/client';
 import { getApiErrorMessage } from '../api/errorMessage';
+import { stopStayService } from '../location/stayService';
 
-const ACCESS_TOKEN_KEY = 'bapjul.accessToken.v1';
+const ACCESS_TOKEN_KEY = 'bapjul.accessToken.v2';
+const LEGACY_ACCESS_TOKEN_KEY = 'bapjul.accessToken.v1';
 
 type AuthContextValue = {
   bootstrapping: boolean;
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     setUnauthorizedHandler(async () => {
+      await stopStayService();
       await clearSession();
       setToken(null);
       setUser(null);
@@ -54,6 +57,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       let storedToken: string | null = null;
 
       try {
+        // 이전 시연용 로그인 정보는 삭제하고 실제 가입 계정만 복원합니다.
+        await SecureStore.deleteItemAsync(LEGACY_ACCESS_TOKEN_KEY);
         storedToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
         if (!storedToken || !active) return;
 
@@ -80,10 +85,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await loginRequest({ email, password });
+      const response = await loginRequest({ email: email.trim().toLowerCase(), password });
 
-      if (!response?.accessToken) {
-        throw new Error('로그인 응답에 accessToken이 없습니다. 백엔드 응답 DTO를 확인해 주세요.');
+      if (!response?.accessToken || !response.user ||
+          !['CUSTOMER', 'OWNER'].includes(response.user.role)) {
+        throw new Error('로그인 정보를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.');
       }
 
       const currentUser = response.user;
@@ -105,6 +111,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const logout = async () => {
+    await stopStayService();
     await clearSession();
     setToken(null);
     setUser(null);

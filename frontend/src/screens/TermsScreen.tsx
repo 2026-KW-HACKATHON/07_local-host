@@ -23,7 +23,7 @@ export function TermsScreen({ onContinue }: { onContinue: () => void }) {
   const submit = () => {
     const allRequiredChecked = TERMS.every((term, index) => !term.required || checked[index]);
     if (!allRequiredChecked) {
-      Alert.alert('필수 약관에 동의해 주세요', '필수 항목 네 개를 모두 선택해야 가입할 수 있어요.');
+      Alert.alert('필수 약관에 동의해 주세요', '필수 항목 네 개를 모두 선택해야 가입할 수 있어요.', [{ text: '확인' }]);
       return;
     }
 
@@ -42,9 +42,11 @@ export function TermsScreen({ onContinue }: { onContinue: () => void }) {
             accessibilityState={{ checked: checked[index] }}
             key={term.label}
             onPress={() => toggle(index)}
+            style={styles.termRow}
           >
+            <View style={[styles.checkbox, checked[index] && styles.checkboxChecked]}><Text style={styles.checkmark}>{checked[index] ? '✓' : ''}</Text></View>
             <Text allowFontScaling={false} style={styles.termText}>
-              {checked[index] ? '■' : '□'} {term.label}
+              {term.label}
             </Text>
           </Pressable>
         ))}
@@ -63,36 +65,41 @@ export function TermsScreen({ onContinue }: { onContinue: () => void }) {
 
 const styles = StyleSheet.create({
   title: {
-    width: px(263),
-    height: px(72),
+    width: px(350),
     marginTop: px(56),
     marginLeft: px(24),
     color: colors.black,
-    fontFamily: fonts.bold,
-    fontSize: px(30),
-    lineHeight: px(36),
+    fontFamily: fonts.koreanBold,
+    fontSize: px(28),
+    lineHeight: px(40),
     includeFontPadding: false,
     letterSpacing: 0,
   },
   termsList: {
-    width: px(367),
-    height: px(234),
-    marginTop: px(73),
+    width: px(350),
+    marginTop: px(48),
     marginLeft: px(24),
+    gap: px(16),
   },
   termText: {
     color: colors.black,
     fontFamily: fonts.koreanMedium,
-    fontSize: px(25),
-    lineHeight: px(38.75),
+    fontSize: px(18),
+    lineHeight: px(28),
+    flex: 1,
     includeFontPadding: false,
     letterSpacing: 0,
   },
   startButton: {
-    marginTop: px(330),
+    marginTop: 'auto',
+    marginBottom: px(36),
     marginLeft: px(15),
   },
   startText: {
     color: colors.white,
   },
+  termRow: { flexDirection: 'row', alignItems: 'center', minHeight: px(44), gap: px(12) },
+  checkbox: { width: px(24), height: px(24), borderWidth: 1.5, borderColor: colors.muted, borderRadius: px(5), alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
+  checkmark: { color: colors.white, fontSize: px(17), lineHeight: px(22) },
 });

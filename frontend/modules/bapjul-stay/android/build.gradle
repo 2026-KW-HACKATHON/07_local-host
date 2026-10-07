@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.bapjul.stay'
+version = '1.0.0'
+
+android {
+  namespace 'com.bapjul.stay'
+  defaultConfig {
+    versionCode 1
+    versionName '1.0.0'
+  }
+}
+
+dependencies {
+  // Expo SDK 57의 expo-location과 동일 버전으로 Kotlin 메타데이터 호환을 유지합니다.
+  implementation 'com.google.android.gms:play-services-location:21.0.1'
+  implementation 'net.sf.geographiclib:GeographicLib-Java:2.1'
+}

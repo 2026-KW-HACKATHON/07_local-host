@@ -15,7 +15,7 @@ export function WelcomeScreen({
   return (
     <DesignScreen>
       <HeaderLogo style={styles.logo} />
-      <ScreenTitle style={styles.title}>어서오세요</ScreenTitle>
+      <ScreenTitle style={styles.title}>반가워요!</ScreenTitle>
       <FigmaButton onPress={onLogin} style={styles.loginButton} textStyle={styles.loginText}>
         로그인
       </FigmaButton>
@@ -31,7 +31,7 @@ export function WelcomeScreen({
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(19),
-    marginLeft: px(5),
+    alignSelf: 'center',
   },
   title: {
     marginTop: px(68),
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     marginLeft: px(15),
   },
   loginText: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.koreanBold,
   },
   signupButton: {
     height: px(29),
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   },
   signupText: {
     color: colors.black,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.koreanBold,
     fontSize: px(24),
     lineHeight: px(29),
     includeFontPadding: false,

@@ -19,13 +19,15 @@ export type PendingSignup = {
 
 export function SignupScreen({
   onContinue,
+  initialValues,
 }: {
   onContinue: (signup: PendingSignup) => void;
+  initialValues?: PendingSignup | null;
 }) {
-  const [email, setEmail] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [email, setEmail] = useState(initialValues?.email ?? '');
+  const [nickname, setNickname] = useState(initialValues?.nickname ?? '');
+  const [password, setPassword] = useState(initialValues?.password ?? '');
+  const [passwordConfirm, setPasswordConfirm] = useState(initialValues?.password ?? '');
   const nicknameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
@@ -34,23 +36,23 @@ export function SignupScreen({
     const normalizedEmail = email.trim().toLowerCase();
     const trimmedNickname = nickname.trim();
 
-    if (!normalizedEmail.includes('@')) {
-      Alert.alert('이메일을 확인해 주세요', '로그인에 사용할 이메일 주소를 입력해 주세요.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      Alert.alert('이메일을 확인해 주세요', '로그인에 사용할 이메일 주소를 입력해 주세요.', [{ text: '확인' }]);
       return;
     }
 
     if (trimmedNickname.length < 2 || trimmedNickname.length > 30) {
-      Alert.alert('닉네임을 확인해 주세요', '닉네임은 2자 이상 30자 이하로 입력해 주세요.');
+      Alert.alert('닉네임을 확인해 주세요', '닉네임은 2자 이상 30자 이하로 입력해 주세요.', [{ text: '확인' }]);
       return;
     }
 
     if (password.length < 8 || password.length > 50) {
-      Alert.alert('비밀번호를 확인해 주세요', '비밀번호는 8자 이상 50자 이하로 입력해 주세요.');
+      Alert.alert('비밀번호를 확인해 주세요', '비밀번호는 8자 이상 50자 이하로 입력해 주세요.', [{ text: '확인' }]);
       return;
     }
 
     if (password !== passwordConfirm) {
-      Alert.alert('비밀번호가 일치하지 않아요', '두 비밀번호를 다시 확인해 주세요.');
+      Alert.alert('비밀번호가 일치하지 않아요', '두 비밀번호를 다시 확인해 주세요.', [{ text: '확인' }]);
       return;
     }
 
@@ -60,7 +62,8 @@ export function SignupScreen({
   const showSocialSetup = (provider: 'Google' | '네이버') => {
     Alert.alert(
       `${provider} 회원가입 설정이 필요해요`,
-      '현재 백엔드에는 소셜 OAuth 엔드포인트가 없어 이메일 회원가입만 연결되어 있습니다.',
+      '소셜 회원가입은 준비 중이에요. 이메일로 가입해 주세요.',
+      [{ text: '확인' }],
     );
   };
 
@@ -126,26 +129,26 @@ export function SignupScreen({
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(18),
-    marginLeft: px(7),
+    alignSelf: 'center',
   },
   title: {
     marginTop: px(23),
   },
   form: {
-    marginTop: px(47),
+    marginTop: px(24),
     marginLeft: px(15),
-    gap: px(25),
+    gap: px(16),
   },
   confirmField: {
-    marginTop: px(3),
+    marginTop: 0,
   },
   socials: {
-    marginTop: px(79),
+    marginTop: px(24),
     marginLeft: px(14),
     gap: px(12),
   },
   confirmButton: {
-    marginTop: px(69),
+    marginTop: px(24),
     marginLeft: px(15),
   },
   confirmText: {

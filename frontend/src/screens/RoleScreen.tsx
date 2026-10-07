@@ -22,7 +22,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScree
     if (requestInFlight.current) return;
 
     if (allowedRole && role === 'OWNER' && allowedRole !== 'OWNER') {
-      Alert.alert('점주 권한이 필요해요', '이 계정은 일반 사용자 계정입니다.');
+      Alert.alert('점주 권한이 필요해요', '이 계정은 일반 사용자 계정입니다.', [{ text: '확인' }]);
       return;
     }
 
@@ -34,6 +34,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScree
       Alert.alert(
         creatingAccount ? '회원가입하지 못했어요' : '버전을 열지 못했어요',
         error instanceof Error ? error.message : '잠시 후 다시 시도해 주세요.',
+        [{ text: '확인' }],
       );
     } finally {
       requestInFlight.current = false;
@@ -55,7 +56,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScree
           style={styles.roleButton}
           textStyle={styles.roleText}
         >
-          손님 버전
+          {creatingAccount ? '손님으로 가입' : '손님 버전'}
         </FigmaButton>
         <FigmaButton
           backgroundColor={colors.owner}
@@ -65,7 +66,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScree
           style={styles.roleButton}
           textStyle={styles.roleText}
         >
-          점주 버전
+          {creatingAccount ? '점주로 가입' : '점주 버전'}
         </FigmaButton>
       </View>
     </DesignScreen>
@@ -75,6 +76,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect }: RoleScree
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(18),
+    alignSelf: 'center',
   },
   actions: {
     marginTop: px(204),
@@ -85,6 +87,6 @@ const styles = StyleSheet.create({
     height: px(126),
   },
   roleText: {
-    fontFamily: fonts.bold,
+    fontFamily: fonts.koreanBold,
   },
 });

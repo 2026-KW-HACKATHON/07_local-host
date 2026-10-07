@@ -66,7 +66,7 @@ export interface CrowdStatusResponse {
   label: string;
   score: number;
   reportCount: number;
-  updatedAt: string;
+  updatedAt: string | null;
 }
 
 export interface CrowdChartPoint {
