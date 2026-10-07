@@ -42,6 +42,13 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
   const scroll = useRef<ScrollView>(null);
   const selected = restaurants.find(r => r.id === selectedId) ?? null;
 
+  const changeRestaurant = useCallback((id: number) => {
+    // 늦게 도착한 이전 식당 응답도 무효화한다.
+    request.current++;
+    setCrowd(null); setPromotions(null); setDraft(null);
+    setLoading(true); setSelectedId(id);
+  }, []);
+
   const refresh = useCallback(async () => {
     if (!user || !token) return;
     const version = ++request.current;
@@ -52,7 +59,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
       setRestaurants(all);
       const restaurant = all.find(r => r.id === selectedId) ?? all[0];
       if (!restaurant) { setSelectedId(null); setCrowd(null); setPromotions([]); setDraft(null); return; }
-      if (restaurant.id !== selectedId) { setSelectedId(restaurant.id); return; }
+      if (restaurant.id !== selectedId) { changeRestaurant(restaurant.id); return; }
       const results = await Promise.allSettled([getCurrentCrowd(restaurant.id), getManagedPromotions(restaurant.id, token), readOwnerDraft(user.id, restaurant.id)]);
       if (version !== request.current) return;
       setCrowd(results[0].status === 'fulfilled' ? results[0].value : null);
@@ -61,7 +68,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
       if (results.some(r => r.status === 'rejected')) setError('일부 정보를 불러오지 못했어요. 다시 시도해 주세요.');
     } catch (e) { if (version === request.current) setError(getApiErrorMessage(e, 'request')); }
     finally { if (version === request.current) setLoading(false); }
-  }, [selectedId, token, user?.id]);
+  }, [selectedId, token, user?.id, changeRestaurant]);
   useEffect(() => { void refresh(); return () => { request.current++; }; }, [refresh]);
   useEffect(() => { scroll.current?.scrollTo({ y: 0, animated: false }); }, [page, tab, selectedId]);
 
@@ -87,8 +94,8 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
   const saveRestaurant = (value: RestaurantWriteRequest) => { void mutate(async () => {
     const creating = page === 'create';
     const result = creating ? await createRestaurant(value, token!) : await updateRestaurant(selected!.id, value, token!);
-    setRestaurants(previous => [...previous.filter(r => r.id !== result.id), result]); setSelectedId(result.id);
-    if (creating) { setDraft(emptyOwnerDraft()); setPage('setupPerks'); }
+    setRestaurants(previous => [...previous.filter(r => r.id !== result.id), result]);
+    if (creating) { changeRestaurant(result.id); setDraft(emptyOwnerDraft()); setPage('setupPerks'); }
     else { setPage('main'); setTab('my'); }
     setDialog({ title: creating ? '식당이 등록됐어요' : '식당 정보를 저장했어요', message: creating ? '이어서 단계별 프로모션 초안을 설정해 주세요.' : '손님 화면에도 변경한 정보가 반영돼요.', confirm: '확인' });
   }); };
@@ -137,7 +144,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
         {Boolean(error) && <View style={styles.errorBox}><Text style={t.small}>{error}</Text><OwnerButton secondary disabled={busy || loading} onPress={() => { void refresh(); }}>다시 시도</OwnerButton></View>}
         {page === 'create' || page === 'restaurant' ? <RestaurantForm key={page} restaurant={page === 'create' ? null : selected} busy={busy} onSave={saveRestaurant} /> :
           page === 'switch' ? <><Text style={t.title}>내 식당 선택</Text>{restaurants.map(r => <OwnerButton secondary key={r.id} onPress={() => {
-            if (r.id !== selectedId) { setCrowd(null); setPromotions(null); setDraft(null); setSelectedId(r.id); }
+            if (r.id !== selectedId) changeRestaurant(r.id);
             setPage('main');
           }}>{r.name}{r.id === selectedId ? ' · 선택됨' : ''}</OwnerButton>)}<OwnerButton onPress={() => setPage('create')}>새 식당 등록</OwnerButton></> :
           !selected ? loading ? <ActivityIndicator color={c.black} /> : <><Text style={t.title}>내 식당을 등록해주세요</Text><OwnerNotice>식당을 등록하면 혼잡도 제보와 프로모션을 관리할 수 있어요.</OwnerNotice>
