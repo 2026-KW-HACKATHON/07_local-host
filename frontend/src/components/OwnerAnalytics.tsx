@@ -76,7 +76,7 @@ export function OwnerAnalytics({ restaurantId, token, refreshKey = 0 }: OwnerAna
         </ScrollView>
         <View style={styles.legend}>{distribution.map(({ key, count }) => <View key={key} style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: colors[key] }]}/><Text style={t.small}>
-            {key === 'available' ? '바로 앉음' : key === 'fewSeats' ? '자리 적음' : key === 'longWait' ? '대기 길음' : '미확인'} {count}
+            {key === 'available' ? '여유' : key === 'fewSeats' ? '보통' : key === 'longWait' ? '혼잡' : '미확인'} {count}
           </Text></View>)}</View>
         {data.total === 0 && <Text style={[t.body, styles.stateText]}>최근 4주 제보가 없어요.</Text>}
         {data.total > 0 && day?.total === 0 && <Text style={[t.body, styles.stateText]}>이 요일에는 제보가 없어요.</Text>}
@@ -87,7 +87,7 @@ export function OwnerAnalytics({ restaurantId, token, refreshKey = 0 }: OwnerAna
 
 function HourColumn({ bucket, maxHour }: { bucket: OwnerHourlyCount; maxHour: number }) {
   const height = bucket.total === 0 ? 0 : Math.max(px(4), bucket.total / maxHour * px(110));
-  const label = `${bucket.hour}시, 총 ${bucket.total}건, 바로 앉음 ${bucket.available}건, 자리 적음 ${bucket.fewSeats}건, 대기 길음 ${bucket.longWait}건`;
+  const label = `${bucket.hour}시, 총 ${bucket.total}건, 여유 ${bucket.available}건, 보통 ${bucket.fewSeats}건, 혼잡 ${bucket.longWait}건`;
   return <View style={styles.hourColumn} accessible accessibilityLabel={label}>
     <Text style={t.small}>{bucket.total || '—'}</Text>
     <View style={styles.hourTrack}><View style={{ height, width: px(24), justifyContent: 'flex-end' }}>

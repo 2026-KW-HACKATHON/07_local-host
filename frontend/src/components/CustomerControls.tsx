@@ -33,7 +33,7 @@ export function CustomerSearch({ value, onChange, onSubmit }: { value: string; o
 }
 
 export const crowdLabels: Record<CrowdLevel, string> = {
-  AVAILABLE: '바로 앉아요', FEW_SEATS: '자리가 적어요', LONG_WAIT: '대기가 길어요', UNKNOWN: '아직 제보가 없어요',
+  AVAILABLE: '여유', FEW_SEATS: '보통', LONG_WAIT: '혼잡', UNKNOWN: '아직 제보가 없어요',
 };
 
 export function CrowdBadge({ level }: { level: CrowdLevel }) {

@@ -7,9 +7,10 @@ import { getActivePromotions, getManagedPromotions, updatePromotion } from '../a
 import { getApiErrorMessage } from '../api/errorMessage';
 import type { Restaurant, Promotion, CrowdStatusResponse, ReportableCrowdLevel } from '../api/types';
 import { colors, fonts, px } from '../theme/tokens';
+import { crowdLabels } from '../components/CustomerControls';
 
 const levels: [ReportableCrowdLevel, string][] = [
-  ['AVAILABLE', '바로 앉아요'], ['FEW_SEATS', '자리가 적어요'], ['LONG_WAIT', '대기가 길어요'],
+  ['AVAILABLE', '여유'], ['FEW_SEATS', '보통'], ['LONG_WAIT', '혼잡'],
 ];
 
 export function RestaurantHomeScreen({ onLogout }: { onLogout: () => void }) {
@@ -67,7 +68,7 @@ export function RestaurantHomeScreen({ onLogout }: { onLogout: () => void }) {
             <Text style={styles.heading}>{selected.name}</Text>
             <Text style={styles.text}>{selected.address}</Text>
             <Text style={styles.text}>{selected.openingTime} ~ {selected.closingTime}</Text>
-            <Text style={styles.text}>현재 혼잡도: {crowd?.label ?? '정보 없음'}</Text>
+            <Text style={styles.text}>현재 혼잡도: {crowd ? crowdLabels[crowd.level] : '정보 없음'}</Text>
             <Text style={styles.text}>최근 제보 {crowd?.reportCount ?? 0}건</Text>
             {levels.map(([level, label]) => <Pressable key={level} disabled={busy || !token} style={({ pressed }) => [styles.button, (busy || !token || pressed) && styles.inactive]}
               onPress={() => void mutate(() => reportCrowd(selected.id, { level }, token!))}>

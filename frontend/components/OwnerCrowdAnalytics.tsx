@@ -105,7 +105,7 @@ export default function OwnerCrowdAnalytics({ restaurantId, token, refreshKey = 
           ))}
         </View>
       </ScrollView>
-      <Text style={styles.legend}>혼잡 분포: 바로 앉음 {current?.hours.reduce((sum, h) => sum + h.available, 0) ?? 0} · 자리 적음 {current?.hours.reduce((sum, h) => sum + h.fewSeats, 0) ?? 0} · 대기 길음 {current?.hours.reduce((sum, h) => sum + h.longWait, 0) ?? 0}</Text>
+      <Text style={styles.legend}>혼잡 분포: 여유 {current?.hours.reduce((sum, h) => sum + h.available, 0) ?? 0} · 보통 {current?.hours.reduce((sum, h) => sum + h.fewSeats, 0) ?? 0} · 혼잡 {current?.hours.reduce((sum, h) => sum + h.longWait, 0) ?? 0}</Text>
     </View>
   );
 }
