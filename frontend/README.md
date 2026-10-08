@@ -2,7 +2,7 @@
 
 기존 Spring Boot 백엔드와 연결되는 **Expo + React Native 모바일 앱**입니다. 웹/Vite 미리보기용 프로젝트가 아니며, 인증을 프론트에서 흉내 내는 로컬 mock도 사용하지 않습니다.
 
-현재 구현 범위는 Figma의 첫 번째 줄인 시작 화면, 위치 권한, 알림 권한, 환영 화면, 로그인, 회원가입, 약관, 역할 선택입니다.
+시작·권한·로그인·회원가입 흐름과 손님/점주 화면이 구현되어 있습니다. 기능별 실제 서버 지원 범위와 미지원 항목은 `docs/BACKEND_REQUIREMENTS.md` 및 `docs/OWNER_UI.md`를 확인하세요.
 
 ## 현재 화면까지 연결된 백엔드 기능
 
@@ -10,9 +10,20 @@
 - `POST /api/auth/login`: 실제 백엔드 로그인 및 JWT 수신
 - `GET /api/auth/me`: 저장된 JWT로 로그인 유지와 사용자 역할 확인
 
-첫 줄 다음 화면에서 사용할 식당 생성·목록·상세·수정, 현재 혼잡도·차트 조회와 제보, 프로모션 생성·조회·수정·삭제는 API 클라이언트 모듈까지 준비되어 있습니다. 아직 해당 화면에서 호출되는 단계는 아닙니다.
+손님과 점주 화면에서 식당·혼잡도·차트·프로모션 API를 호출합니다. 쿠폰 발급/보유와 포인트 적립 API는 아직 없으므로 실제 성공으로 표시하지 않습니다.
 
-JWT만 기기의 SecureStore에 보관합니다. 비밀번호는 앱에 저장하지 않습니다. `backend-b` Controller를 기준으로 현재 혼잡도는 `GET /api/restaurants/{id}/crowd`, 차트는 `GET /api/restaurants/{id}/crowd/chart?hours=12`에 연결했습니다.
+인증 정보 중 JWT만 기기의 SecureStore에 보관하며 비밀번호는 저장하지 않습니다. 기기 전용 프로필 설정은 계정·서버별로 분리해 저장하고 선택한 사진은 앱 영구 저장소에 복사합니다. `backend-b` Controller를 기준으로 현재 혼잡도는 `GET /api/restaurants/{id}/crowd`, 차트는 `GET /api/restaurants/{id}/crowd/chart?hours=24`에 연결했습니다.
+
+## 손님 피드백 반영 (2026-10-08)
+
+- 식당 목록 상단 손잡이를 위/아래로 끌거나 눌러 펼침/접기. 내부 스크롤과 3개씩 더 보기, 거리순 기본 선택.
+- 거리 없는 식당은 임의 거리를 만들지 않고 ‘거리 확인 전’으로 표시.
+- 검색은 앱 내부 네이버 지도 화면에서 열림. 밥줄 식당 API와 네이버 결과의 통합은 별도 서버 계약 필요.
+- My의 별표 안내 삭제, 오른쪽 위 로그아웃, 사진 선택 및 닉네임 기기 저장.
+- 명시적으로 GPS 관찰을 시작한 뒤 5분 체류/50m 이내 확인된 식당만 제보 가능. 앱 활성 중 안내 팝업, 백그라운드 체류 완료 알림에서 제보로 이동. OS 설정/방해금지에 따라 알림 표시 방식이 달라질 수 있음.
+- 화면의 수집 중지 버튼은 제거하되 Android 수집 알림의 중지와 로그아웃 중지는 유지. 권한 철회·강제 종료·재부팅을 우회해 수집하지 않음.
+- 사진 선택/네이버 검색/새 체류 알림은 새 네이티브 모듈이 포함된 APK 재빌드 필요. JavaScript 새로고침만으로 기존 APK에 추가되지 않음.
+- Windows의 pnpm 경로 길이로 WebView C++ 빌드가 실패하지 않도록 `react-native.config.js`에서 공개 `node_modules` 경로를 사용한다. 생성된 Android 폴더를 직접 수정하지 않아 prebuild 후에도 유지된다.
 
 ## 실행 준비
 
@@ -66,10 +77,10 @@ eas build --platform android --profile production
 
 - 확인된 Figma 원본 프레임: 412×917
 - 검수 기준 뷰포트: 390×844
-- `0.9203925856` 비율로 각 수치를 변환해 터치 영역과 화면 좌표를 함께 유지
+- 원본 너비를 기준으로 `390 / 412` 비율을 적용하고 화면 높이는 별도로 유지
 - Auto Layout은 React Native의 Flex 구조로 변환
 - 색상·간격·타이포그래피는 공통 토큰으로 관리
-- 원본 로고·위치·알림 이미지가 전달되지 않은 곳은 투명 에셋 슬롯으로 보존
+- 전달받은 로고·픽토그램을 사용하고, 미제공 자산은 임의 아이콘 라이브러리로 대체하지 않음
 - 위치·알림 동의창은 이미지로 복제하지 않고 운영체제의 실제 권한 요청을 사용
 
 Google/네이버 로그인은 백엔드 OAuth 엔드포인트와 앱 키가 제공되지 않아 가짜 성공 처리를 넣지 않았습니다. 현재 버튼은 필요한 설정을 안내하고, 이메일 로그인만 실제 백엔드에 연결됩니다.
@@ -82,6 +93,7 @@ Google/네이버 로그인은 백엔드 OAuth 엔드포인트와 앱 키가 제�
 pnpm run typecheck
 pnpm run check:deps
 pnpm run export:android
+node --test src/customer/restaurantList.test.cjs src/location/stayEligibility.test.cjs src/profile/localProfile.test.cjs
 ```
 
 `export:android`는 Android용 JavaScript 번들 검증이며 APK 생성 명령은 아닙니다. APK/AAB 배포 빌드는 `eas.json`의 preview/production 프로필을 사용합니다.

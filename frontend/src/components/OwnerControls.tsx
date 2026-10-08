@@ -7,12 +7,11 @@ import { px } from '../theme/tokens';
 export type OwnerTab = 'report' | 'promotion' | 'data' | 'my';
 export function OwnerNavigation({ tab, onSelect, disabled }: { tab: OwnerTab; onSelect: (value: OwnerTab) => void; disabled: boolean }) {
   return <View accessibilityRole="tablist" style={styles.nav}>{([
-    ['report', '제보', 'marketing'], ['promotion', '프로모션', 'point'], ['data', '데이터', null], ['my', 'My', 'person'],
+    ['report', '제보', 'marketing'], ['promotion', '프로모션', 'point'], ['data', '데이터', 'data'], ['my', 'My', 'person'],
   ] as const).map(([value, label, icon]) => <Pressable key={value} accessibilityRole="tab" accessibilityLabel={label}
     accessibilityState={{ selected: tab === value, disabled }} disabled={disabled} testID={`owner-tab-${value}`}
     onPress={() => onSelect(value)} style={styles.tab}>
-    {icon ? <AppIcon name={icon} size={30} color={tab === value ? c.black : c.white} /> :
-      <View style={styles.chartIcon}>{[14, 24, 19, 30].map((height, i) => <View key={i} style={{ width: px(5), height: px(height), backgroundColor: tab === value ? c.black : c.white }} />)}</View>}
+    <AppIcon name={icon} size={30} color={tab === value ? c.black : c.white} />
     <Text style={[t.small, { color: tab === value ? c.black : c.white }]}>{label}</Text>
   </Pressable>)}</View>;
 }
@@ -25,7 +24,7 @@ export function OwnerButton({ children, onPress, disabled = false, secondary = f
   </Pressable>;
 }
 export function OwnerField({ label, ...props }: TextInputProps & { label: string }) {
-  return <View style={styles.fieldGroup}><Text style={t.body}>{label}</Text><TextInput {...props} accessibilityLabel={label}
+  return <View style={styles.fieldGroup}><Text style={t.body}>{label}</Text><TextInput {...props} accessibilityLabel={props.accessibilityLabel ?? label}
     placeholderTextColor={c.placeholder} style={[styles.input, props.multiline && styles.multiline, props.style]} /></View>;
 }
 export function OwnerInfoRow({ label, value, onPress, action = '수정' }: { label: string; value: string; onPress: () => void; action?: string }) {
@@ -40,7 +39,6 @@ export function OwnerBack({ onPress, disabled }: { onPress: () => void; disabled
 const styles = StyleSheet.create({
   nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.neutralButton },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(5) },
-  chartIcon: { width: px(30), height: px(30), flexDirection: 'row', alignItems: 'flex-end', gap: px(3) },
   button: { minHeight: s.control, padding: px(12), backgroundColor: c.primary, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
   secondary: { backgroundColor: c.row }, dim: { opacity: 0.45 },
   fieldGroup: { gap: px(8) }, input: { ...t.body, minHeight: s.control, paddingHorizontal: px(18), paddingVertical: px(12), borderRadius: s.radius, backgroundColor: c.field, color: c.black },

@@ -1,19 +1,13 @@
 import { Platform } from 'react-native';
 import { requireOptionalNativeModule } from 'expo';
 import { API_BASE_URL } from '../config/api';
+import type { StayStatus } from './stayEligibility';
+export { getEligibleStayRestaurants, isStayReportLink } from './stayEligibility';
+export type { StayRestaurant, StayStatus } from './stayEligibility';
 
-export interface StayRestaurant {
-  id: string; name: string; address: string; floor: string | null;
-  latitude: number; longitude: number; distanceMeters: number;
-}
-export interface StayStatus {
-  running: boolean;
-  phase: 'unsupported' | 'stopped' | 'observing' | 'waiting' | 'loading' | 'ready' | 'error';
-  message: string;
-  recommendation?: { count: number; radiusMeters: number; dwellDurationMillis: number; restaurants: StayRestaurant[] } | null;
-}
 interface NativeStay {
   getStatus(): string;
+  setAppActive?(active: boolean): void;
   start(baseUrl: string, token: string): Promise<void>;
   stop(): Promise<void>;
 }
@@ -30,3 +24,4 @@ export async function startStayService(token: string) {
   await native.start(API_BASE_URL, token);
 }
 export async function stopStayService() { await native?.stop(); }
+export function setStayAppActive(active: boolean) { native?.setAppActive?.(active); }

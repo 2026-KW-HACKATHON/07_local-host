@@ -12,6 +12,7 @@ import {
 import { colors, fonts, px } from '../theme/tokens';
 
 type LoginScreenProps = {
+  initialEmail?: string;
   onLogin: (email: string, password: string) => Promise<void>;
   onSignup: () => void;
   onBack: () => void;
@@ -25,8 +26,8 @@ function showSocialSetup(provider: 'Google' | '네이버') {
   );
 }
 
-export function LoginScreen({ onLogin, onSignup, onBack }: LoginScreenProps) {
-  const [email, setEmail] = useState('');
+export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: LoginScreenProps) {
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const passwordRef = useRef<TextInput>(null);
@@ -103,7 +104,8 @@ export function LoginScreen({ onLogin, onSignup, onBack }: LoginScreenProps) {
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(17),
-    alignSelf: 'center',
+    marginLeft: px(-2),
+    alignSelf: 'flex-start',
   },
   title: {
     marginTop: px(24),

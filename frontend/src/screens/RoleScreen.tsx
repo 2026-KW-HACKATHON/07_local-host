@@ -77,7 +77,8 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect, onBack }: R
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(18),
-    alignSelf: 'center',
+    marginLeft: px(-2),
+    alignSelf: 'flex-start',
   },
   actions: {
     marginTop: px(204),

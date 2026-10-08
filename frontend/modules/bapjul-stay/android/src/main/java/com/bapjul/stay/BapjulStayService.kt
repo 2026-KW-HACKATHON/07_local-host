@@ -10,6 +10,7 @@ import android.net.Uri
 import bapjul.stay.*
 import bapjul.location.android.StayApiClient
 import com.google.android.gms.location.*
+import org.json.JSONArray
 import org.json.JSONObject
 
 // JS 화면의 생명주기와 분리된 사용자 동의 기반 location foreground service.
@@ -17,12 +18,26 @@ import org.json.JSONObject
 class BapjulStayService : Service() {
   companion object {
     private const val CHANNEL = "bapjul-stay"
+    private const val READY_CHANNEL = "bapjul-stay-ready"
     private const val NOTIFICATION = 5101
+    private const val READY_NOTIFICATION = 5102
+    @Volatile var appActive = false
+    @Volatile private var latestObservationElapsed = 0L
     @Volatile var status: JSONObject = JSONObject().put("running", false).put("phase", "stopped").put("message", "위치 수집이 꺼져 있어요.")
       private set
-    fun publish(running: Boolean, phase: String, message: String, result: JSONObject? = null) {
+    fun publish(running: Boolean, phase: String, message: String, result: JSONObject? = null,
+                recommendationId: String? = null, notificationShown: Boolean = false) {
       status = JSONObject().put("running", running).put("phase", phase).put("message", message)
         .put("updatedAt", System.currentTimeMillis()).put("recommendation", result ?: JSONObject.NULL)
+        .put("recommendationId", recommendationId ?: JSONObject.NULL).put("notificationShown", notificationShown)
+    }
+    fun readStatus(): String {
+      val snapshot = JSONObject(status.toString())
+      if (latestObservationElapsed > 0L && snapshot.optBoolean("running")) {
+        val age = SystemClock.elapsedRealtime() - latestObservationElapsed
+        snapshot.put("lastObservationAt", System.currentTimeMillis() - age)
+      }
+      return snapshot.toString()
     }
   }
   private val tracker = StayTracker()
@@ -33,6 +48,10 @@ class BapjulStayService : Service() {
   private var active = false
   private var lastSampleElapsed = 0L
   private var confirmedPosition: GeoSample? = null
+  private var latestPosition: GeoSample? = null
+  private var readyRecommendation: JSONObject? = null
+  private var recommendationId: String? = null
+  private var notificationShown = false
   private var generation = 0L
   private var pending = false
 
@@ -44,9 +63,7 @@ class BapjulStayService : Service() {
         stopSelf(); return
       }
       if (lastSampleElapsed != 0L && SystemClock.elapsedRealtime() - lastSampleElapsed > StayRules.MAX_SAMPLE_GAP_MILLIS) {
-        tracker.reset(); confirmedPosition = null; generation++
-        publish(true, "waiting", "GPS 관측이 끊겨 새 5분 구간을 기다리고 있어요.")
-        lastSampleElapsed = 0L
+        invalidate("GPS 관측이 끊겨 새 5분 구간을 기다리고 있어요.")
       }
       handler.postDelayed(this, 15000)
     }
@@ -60,40 +77,54 @@ class BapjulStayService : Service() {
         try {
           val sample = GeoSample(location.latitude, location.longitude, location.accuracy.toDouble(), location.elapsedRealtimeNanos / 1000000)
           val gap = sample.elapsedRealtimeMillis - lastSampleElapsed
-          if (sample.accuracyMeters > StayRules.DEFAULT.maxAccuracyMeters || now - sample.elapsedRealtimeMillis > StayRules.MAX_LOCAL_SAMPLE_AGE_MILLIS) {
+          if (sample.accuracyMeters > StayRules.DEFAULT.maxAccuracyMeters || sample.elapsedRealtimeMillis > now ||
+              now - sample.elapsedRealtimeMillis > StayRules.MAX_LOCAL_SAMPLE_AGE_MILLIS) {
             invalidate("GPS 오차가 커서 정확한 위치를 기다리고 있어요."); continue
           }
           if (lastSampleElapsed != 0L && gap <= 0) continue
           if (lastSampleElapsed != 0L && gap > StayRules.MAX_SAMPLE_GAP_MILLIS) invalidate("새 5분 체류 구간을 확인하고 있어요.")
           lastSampleElapsed = sample.elapsedRealtimeMillis
+          latestObservationElapsed = sample.elapsedRealtimeMillis
+          latestPosition = sample
           val previous = confirmedPosition
           if (previous != null && GeoDistance.meters(previous, sample) > StayRules.DEFAULT.stayRadiusMeters) {
-            confirmedPosition = null; generation++
-            publish(true, "observing", "이동을 감지해 새 5분 체류 구간을 확인하고 있어요.")
+            invalidate("이동을 감지해 새 5분 체류 구간을 확인하고 있어요.")
+            lastSampleElapsed = sample.elapsedRealtimeMillis
+            latestObservationElapsed = sample.elapsedRealtimeMillis
+            latestPosition = sample
           }
+          if (readyRecommendation != null) publishReady(sample)
           val window = tracker.observe(sample, now)
           if (window.isPresent && !pending) {
             pending = true
-            confirmedPosition = sample
+            // Continue comparing with the first point, not the last jittered GPS fix.
+            confirmedPosition = window.get().samples.first()
             val requestGeneration = generation
             publish(true, "loading", "5분 체류를 확인했어요. 근처 식당을 조회하고 있어요.")
             api?.fetch(window.get(), location.time, token, object : StayApiClient.Callback {
               override fun onSuccess(response: JSONObject) {
-                pending = false
                 if (!active || generation != requestGeneration) return
-                publish(true, "ready", if (response.optInt("count") > 0) "머무르고 있는 식당을 선택해 주세요." else "50m 안에 좌표가 등록된 식당이 없어요.", response)
-                getSystemService(NotificationManager::class.java).notify(NOTIFICATION,
-                  notification(if (response.optInt("count") > 0) "5분 체류를 확인했어요. 눌러서 입장한 식당을 선택해 주세요." else "50m 안에 좌표가 등록된 식당이 없어요."))
+                pending = false
+                readyRecommendation = response
+                recommendationId = "${System.currentTimeMillis()}-$requestGeneration"
+                val current = latestPosition ?: return
+                publishReady(current)
+                val hasCandidates = status.optJSONObject("recommendation")?.optInt("count", 0) ?: 0
+                if (hasCandidates > 0) {
+                  notificationShown = !appActive
+                  publishReady(current)
+                  if (notificationShown) getSystemService(NotificationManager::class.java).notify(READY_NOTIFICATION, readyNotification())
+                }
               }
               override fun onError(error: Exception) {
-                pending = false
                 if (!active || generation != requestGeneration) return
+                pending = false
                 if (error.message?.contains("HTTP 401") == true || error.message?.contains("HTTP 403") == true) {
                   publish(false, "error", "로그인이 만료돼 위치 수집을 중지했어요. 다시 로그인해 주세요.")
                   stopSelf(); return
                 }
                 // 오래된 위치를 재전송하지 않고 새 관측을 시작합니다.
-                tracker.reset(); confirmedPosition = null; generation++
+                invalidate("식당 조회에 실패했어요. 새 5분 구간을 관측하며 재시도해요.")
                 publish(true, "error", "식당 조회에 실패했어요. 새 5분 구간을 관측하며 재시도해요.")
               }
             })
@@ -102,8 +133,30 @@ class BapjulStayService : Service() {
       }
     }
   }
+  private fun publishReady(position: GeoSample) {
+    val source = readyRecommendation ?: return
+    val nearby = JSONArray()
+    val radius = minOf(50.0, source.optDouble("radiusMeters", 0.0))
+    val restaurants = source.optJSONArray("restaurants") ?: JSONArray()
+    if (radius.isFinite() && radius > 0 && source.optLong("dwellDurationMillis") >= StayRules.REQUIRED_STAY_MILLIS) {
+      for (index in 0 until restaurants.length()) {
+        val restaurant = restaurants.optJSONObject(index) ?: continue
+        val latitude = restaurant.optDouble("latitude", Double.NaN)
+        val longitude = restaurant.optDouble("longitude", Double.NaN)
+        if (!latitude.isFinite() || latitude !in -90.0..90.0 || !longitude.isFinite() || longitude !in -180.0..180.0) continue
+        val distance = GeoDistance.meters(position.latitude, position.longitude, latitude, longitude)
+        if (distance.isFinite() && distance <= radius) nearby.put(JSONObject(restaurant.toString()).put("distanceMeters", distance))
+      }
+    }
+    val current = JSONObject(source.toString()).put("restaurants", nearby).put("count", nearby.length())
+    publish(true, "ready", if (nearby.length() > 0) "5분 체류를 확인했어요. 방문한 식당을 선택해 주세요." else "현재 50m 안에 제보할 수 있는 식당이 없어요.",
+      current, recommendationId, notificationShown)
+    if (nearby.length() == 0) getSystemService(NotificationManager::class.java).cancel(READY_NOTIFICATION)
+  }
   private fun invalidate(message: String) {
-    tracker.reset(); confirmedPosition = null; lastSampleElapsed = 0; generation++
+    tracker.reset(); confirmedPosition = null; latestPosition = null; readyRecommendation = null; recommendationId = null
+    notificationShown = false; pending = false; lastSampleElapsed = 0; latestObservationElapsed = 0; generation++
+    getSystemService(NotificationManager::class.java).cancel(READY_NOTIFICATION)
     publish(true, "waiting", message)
   }
   override fun onCreate() {
@@ -111,6 +164,10 @@ class BapjulStayService : Service() {
     locations = LocationServices.getFusedLocationProviderClient(this)
     getSystemService(NotificationManager::class.java).createNotificationChannel(
       NotificationChannel(CHANNEL, "식당 체류 확인", NotificationManager.IMPORTANCE_LOW))
+    getSystemService(NotificationManager::class.java).createNotificationChannel(
+      NotificationChannel(READY_CHANNEL, "5분 체류 후 제보 알림", NotificationManager.IMPORTANCE_HIGH).apply {
+        description = "근처 식당에서 5분 머무르면 제보 화면으로 안내해요."
+      })
   }
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
     if (intent?.action == "STOP") { stopSelf(); return START_NOT_STICKY }
@@ -147,11 +204,25 @@ class BapjulStayService : Service() {
       .setSmallIcon(android.R.drawable.ic_menu_mylocation).setOngoing(true)
       .setContentIntent(open).addAction(Notification.Action.Builder(null, "수집 중지", stop).build()).build()
   }
+  private fun readyNotification(): Notification {
+    val url = Uri.parse("bapjul://report").buildUpon().appendQueryParameter("stayId", recommendationId).build()
+    val launch = Intent(Intent.ACTION_VIEW, url).setPackage(packageName)
+      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+    val open = PendingIntent.getActivity(this, 2, launch, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+    return Notification.Builder(this, READY_CHANNEL)
+      .setContentTitle("이 식당에서 5분 동안 머무르셨나요?")
+      .setContentText("눌러서 방문한 식당을 선택하고 혼잡도를 알려 주세요.")
+      .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+      .setCategory(Notification.CATEGORY_REMINDER).setAutoCancel(true)
+      .setContentIntent(open).build()
+  }
   override fun onDestroy() {
     active = false; generation++; token = ""
     handler.removeCallbacks(watchdog)
     locations.removeLocationUpdates(callback)
-    api?.close(); api = null; tracker.reset(); confirmedPosition = null
+    api?.close(); api = null; tracker.reset(); confirmedPosition = null; latestPosition = null
+    readyRecommendation = null; recommendationId = null; latestObservationElapsed = 0
+    getSystemService(NotificationManager::class.java).cancel(READY_NOTIFICATION)
     if (status.optString("phase") != "error") publish(false, "stopped", "위치 수집이 꺼져 있어요.")
     stopForeground(STOP_FOREGROUND_REMOVE)
     super.onDestroy()

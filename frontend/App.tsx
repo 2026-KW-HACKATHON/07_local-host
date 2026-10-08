@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, BackHandler, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationBar } from 'expo-navigation-bar';
 import { useFonts } from 'expo-font';
@@ -18,6 +18,8 @@ import {
 } from './src/screens/PermissionScreens';
 import { RoleScreen, type UserRole } from './src/screens/RoleScreen';
 import { SignupScreen, type PendingSignup } from './src/screens/SignupScreen';
+import { SignupCompleteScreen } from './src/screens/SignupCompleteScreen';
+import type { LoginRequest } from './src/api/types';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { TermsScreen } from './src/screens/TermsScreen';
 import { WelcomeScreen } from './src/screens/WelcomeScreen';
@@ -31,6 +33,7 @@ type ScreenName =
   | 'welcome'
   | 'login'
   | 'signup'
+  | 'signupComplete'
   | 'terms'
   | 'home'
   | 'role';
@@ -39,11 +42,15 @@ function BapjulFlow() {
   const { bootstrapping, login, signup, user } = useAuth();
   const [screen, setScreen] = useState<ScreenName>('splash');
   const [pendingSignup, setPendingSignup] = useState<PendingSignup | null>(null);
+  // Keep the password only until the user finishes or leaves the one-tap login step.
+  const [completedSignup, setCompletedSignup] = useState<LoginRequest | null>(null);
+  const [loginEmail, setLoginEmail] = useState('');
   const [signupOrigin, setSignupOrigin] = useState<'welcome' | 'login'>('welcome');
   const [navigationBusy, setNavigationBusy] = useState(false);
 
   const goBack = useCallback(() => {
     if (navigationBusy) return true;
+    if (screen === 'signupComplete') { setCompletedSignup(null); setScreen('login'); return true; }
     if (screen === 'role') { setScreen('terms'); return true; }
     if (screen === 'terms') { setScreen('signup'); return true; }
     if (screen === 'signup') { setPendingSignup(null); setScreen(signupOrigin); return true; }
@@ -89,6 +96,7 @@ function BapjulFlow() {
     case 'login':
       return (
         <LoginScreen
+          initialEmail={loginEmail}
           onBack={goBack}
           onSignup={() => { setSignupOrigin('login'); setScreen('signup'); }}
           onLogin={async (email, password) => {
@@ -98,6 +106,16 @@ function BapjulFlow() {
           }}
         />
       );
+    case 'signupComplete':
+      return <SignupCompleteScreen onLater={goBack} onLogin={async () => {
+        if (!completedSignup) { setScreen('login'); return; }
+        setNavigationBusy(true);
+        try {
+          await login(completedSignup.email, completedSignup.password);
+          setCompletedSignup(null);
+          setScreen('home');
+        } finally { setNavigationBusy(false); }
+      }} />;
     case 'signup':
       return (
         <SignupScreen
@@ -138,14 +156,10 @@ function BapjulFlow() {
               setNavigationBusy(true);
               try { await signup(account); }
               finally { setNavigationBusy(false); }
+              setLoginEmail(account.email);
+              setCompletedSignup({ email: account.email, password: account.password });
               setPendingSignup(null);
-
-              setScreen('login');
-              Alert.alert(
-                '회원가입이 완료됐어요',
-                '가입한 이메일과 비밀번호로 로그인해 주세요.',
-                [{ text: '확인' }],
-              );
+              setScreen('signupComplete');
               return;
             }
 
