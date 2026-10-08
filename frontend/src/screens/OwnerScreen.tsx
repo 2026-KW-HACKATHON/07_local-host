@@ -157,7 +157,8 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
     message: `${promotion.benefit}\n새 다운로드가 중단돼요. 이미 받은 쿠폰은 각자의 만료 시각까지 사용할 수 있어요.`, cancel: '돌아가기', confirm: '발행 취소',
     onConfirm: () => { void mutate(async () => { await cancelDevicePromotion(user!, promotion.id); await coupons.refresh(); }); } });
   const published = coupons.promotions.filter(p => p.ownerKey === (user ? deviceUserKey(user) : '') && p.restaurantId === selectedId && isPromotionDownloadable(p, coupons.now));
-  const activeOffers = promotions?.filter(p => p.enabled && koreaObservationTime(p.startAt) <= Date.now() && koreaObservationTime(p.endAt) >= Date.now()) ?? [];
+  const activeOffers = promotions?.filter(p => p.enabled && koreaObservationTime(p.startAt) <= Date.now() && koreaObservationTime(p.endAt) >= Date.now()
+    && p.title.replace(/\s+/g, '') !== '점심10%할인') ?? [];
   const activeStages = published.map(p => `${p.stage}단계 · ${p.benefit}`);
   const activeLabels = [...activeStages, ...activeOffers.map(p => p.title)];
   const businessChange = draft?.businessChange;
@@ -187,7 +188,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
             <View style={styles.submitSpace}><OwnerButton disabled={!level || busy} onPress={submit}>{busy ? '제보 중...' : '완료'}</OwnerButton></View>
           </> : tab === 'report' ? <>
             <Text style={t.title}>가게 혼잡도 제보</Text><View style={styles.actions}>
-              <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : coupons.error ? '프로모션 확인 실패' : promotions === null || coupons.loading ? '프로모션 확인 중' : '현재 프로모션 없음'}</Text>
+              <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : coupons.error ? '프로모션 확인 실패' : promotions === null || coupons.loading ? '프로모션 확인 중' : '진행 중인 프로모션이 없어요.'}</Text>
               <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setLevel(null); setDescription(''); setPage('submit'); }} style={styles.reportButton}><Text style={t.body}>점주가 제보하기</Text></Pressable></View>
             <View style={styles.reportPanel}><Text style={t.heading}>최근 제보</Text><Text style={[t.small, { color: c.muted }]}>내가 작성한 제보</Text>
               {!!reportsError && <Text style={t.small}>{reportsError}</Text>}
