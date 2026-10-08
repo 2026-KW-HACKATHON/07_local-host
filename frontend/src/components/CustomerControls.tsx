@@ -65,6 +65,6 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: px(8), flexShrink: 1 },
   dot: { width: px(18), height: px(18), borderRadius: px(9) },
   button: { minHeight: px(62), backgroundColor: c.brandYellow, borderRadius: px(16), justifyContent: 'center', alignItems: 'center', padding: px(12) },
-  disabled: { backgroundColor: c.neutralButton },
+  disabled: { backgroundColor: c.unselectedButton },
   buttonLabel: { color: c.black, textAlign: 'center' },
 });

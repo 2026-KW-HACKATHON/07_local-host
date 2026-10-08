@@ -182,7 +182,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
             <Text style={t.title}>사장님의{ '\n' }혼잡도 제보가 필요해요</Text>
             <View style={styles.reportCard}><Text style={[t.heading, styles.center]}>혼잡도를 제보해주세요!</Text><View style={styles.levels}>
               {levels.map((value, i) => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: level === value, disabled: busy }} disabled={busy}
-                onPress={() => setLevel(value)} style={({ pressed }) => [styles.level, (level === value || busy || pressed) && styles.checked]}><Text style={[t.small, styles.center]}>{crowdLabels[value]}</Text>
+                onPress={() => setLevel(value)} style={styles.level}><Text style={[t.small, styles.center]}>{crowdLabels[value]}</Text>
                 <View style={[styles.dot, { backgroundColor: [c.available, c.few, c.wait][i] }]} /><Text style={t.small}>{level === value ? '선택됨' : '선택'}</Text></Pressable>)}
             </View><OwnerField label="추가 설명 (선택)" placeholder="예) 현재 대기 3팀" value={description} onChangeText={setDescription} multiline maxLength={200} editable={!busy} /></View>
             <View style={styles.submitSpace}><OwnerButton disabled={!level || busy} onPress={submit}>{busy ? '제보 중...' : '완료'}</OwnerButton></View>
@@ -203,12 +203,12 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
                 <View style={styles.stageBox}><Text style={t.body}>{active?.benefit || draft?.perks[i] || '아직 설정하지 않았어요'}</Text></View>
                 {active && <><Text style={t.small}>{active.pointsCost.toLocaleString('ko-KR')}P · {scheduleSummary(active.schedule)}</Text><Text style={t.small}>{active.schedule.noEndDate ? '게시 종료일 없음' : `${active.schedule.endDate}까지 다운로드 가능`}</Text>
                   {draft?.perks[i] !== active.benefit && <Text style={t.small}>수정한 혜택은 발행 취소 후 다시 발행할 때 적용돼요.</Text>}</>}
-                <OwnerButton secondary={!!active} disabled={busy || coupons.loading || !!coupons.error || (!active && !draft?.perks[i].trim())}
+                <OwnerButton selected={!!active} secondary={!!active} disabled={busy || coupons.loading || !!coupons.error || (!active && !draft?.perks[i].trim())}
                   onPress={() => { if (active) cancelPublished(active); else { setPublishingStage((i + 1) as 1 | 2 | 3); setPage('publish'); } }}>{active ? '발행 취소' : '발행하기'}</OwnerButton>
               </View>;
             })}
           </> : tab === 'data' ? <OwnerAnalytics key={selected.id} restaurantId={selected.id} points={reports.map(r => ({ time: r.reportedAt, level: r.level }))} tieBreak="latest"
-            dataScope="내가 작성한 제보 기준" emptyMessage="최근 4주에 작성한 제보가 없어요." loading={loading} error={reportsError} /> : <>
+            emptyMessage="최근 4주에 작성한 제보가 없어요." loading={loading} error={reportsError} /> : <>
             <Text style={t.title}>내 식당 정보</Text>
             <OwnerInfoRow label="정기 휴무일" value={draft ? draft.closedDays.length ? `매주 ${draft.closedDays.map(d => weekdays[d]).join('·')}요일` : '설정된 정기 휴무 없음' : '정보 확인 필요'} onPress={() => editDraft('closed')} />
             <OwnerInfoRow label="영업 시간" value={`${selected.openingTime?.slice(0, 5) ?? '미등록'} ~ ${selected.closingTime?.slice(0, 5) ?? '미등록'}`} onPress={() => setPage('hours')} />
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   reportPanel: { minHeight: px(350), backgroundColor: c.panel, padding: px(20), borderRadius: s.radius, gap: px(16) },
   reportRow: { gap: px(6), paddingVertical: px(12), borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.border },
   reportCard: { backgroundColor: c.dialog, borderRadius: px(20), padding: px(14), gap: px(24) },
-  levels: { flexDirection: 'row', gap: px(8) }, level: { flex: 1, backgroundColor: c.brandYellow, borderRadius: px(12), alignItems: 'center', justifyContent: 'center', paddingHorizontal: px(3), paddingVertical: px(12), gap: px(10) },
-  checked: { backgroundColor: c.neutralButton }, dot: { width: px(20), height: px(20), borderRadius: px(10) }, center: { textAlign: 'center' }, submitSpace: { paddingTop: px(40) },
+  levels: { flexDirection: 'row', gap: px(8) }, level: { flex: 1, backgroundColor: c.neutralButton, borderRadius: px(12), alignItems: 'center', justifyContent: 'center', paddingHorizontal: px(3), paddingVertical: px(12), gap: px(10) },
+  checked: { backgroundColor: c.selectedButton }, dot: { width: px(20), height: px(20), borderRadius: px(10) }, center: { textAlign: 'center' }, submitSpace: { paddingTop: px(40) },
   smallAction: { minHeight: px(44), minWidth: px(66), alignItems: 'center', justifyContent: 'center', borderRadius: px(8), backgroundColor: c.brandYellow, paddingHorizontal: px(12) },
 });

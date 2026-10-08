@@ -140,6 +140,7 @@ test('owner publication failure does not show a false published promotion', asyn
 
 test('publication success shows stored stage and passes selected schedule and 500-step cost', async () => {
   const form = fixture({ tab: 'promotion' });
+  assert.ok(form.buttons('발행하기').every(button => button.selected === false));
   form.buttons('발행하기')[2].onPress(); form.render();
   const options = schedule();
   form.child('PromotionOptionsForm').onSave(options, 3500); await settle(); form.render();
@@ -151,6 +152,8 @@ test('publication success shows stored stage and passes selected schedule and 50
   assert.deepEqual(plain(form.calls.publish[0][4]), options);
   assert.equal(form.coupons.promotions[0].stage, 3);
   assert.equal(form.buttons('발행 취소').length, 1);
+  assert.equal(form.button('발행 취소').selected, true);
+  assert.ok(form.buttons('발행하기').every(button => button.selected === false));
   assert.equal(form.calls.writeDraft, 0);
 });
 

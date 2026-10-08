@@ -62,5 +62,5 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     letterSpacing: 0,
   },
-  inactive: { backgroundColor: colors.neutralButton },
+  inactive: { backgroundColor: colors.unselectedButton },
 });

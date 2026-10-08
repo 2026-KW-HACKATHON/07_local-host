@@ -8,7 +8,10 @@ export const colors = {
   brandYellow: yellow,
   onboardingYellow: yellow,
   neutralButton: '#D9D9D9',
+  selectedButton: yellow,
+  unselectedButton: '#FFEEB6',
   field: '#E1E0E0',
+  panelBackground: '#F5F5F5',
   // Figma 로그인 입력창의 텍스트: #000000, 불투명도 55%.
   placeholder: 'rgba(0, 0, 0, 0.55)',
   google: '#52C1F1',

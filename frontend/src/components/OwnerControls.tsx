@@ -15,11 +15,12 @@ export function OwnerNavigation({ tab, onSelect, disabled }: { tab: OwnerTab; on
     <Text style={[t.small, { color: tab === value ? c.black : c.muted }]}>{label}</Text>
   </Pressable>)}</View>;
 }
-export function OwnerButton({ children, onPress, disabled = false }: PropsWithChildren<{
-  onPress: () => void; disabled?: boolean; secondary?: boolean;
+export function OwnerButton({ children, onPress, disabled = false, selected }: PropsWithChildren<{
+  onPress: () => void; disabled?: boolean; secondary?: boolean; selected?: boolean;
 }>) {
-  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
-    style={({ pressed }) => [styles.button, (disabled || pressed) && styles.inactive]}>
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled, selected }} disabled={disabled} onPress={onPress}
+    style={({ pressed }) => [styles.button, (disabled || pressed) && styles.inactive,
+      selected !== undefined && { backgroundColor: selected ? c.selectedButton : c.unselectedButton }]}>
     <Text style={[t.body, { color: c.black, textAlign: 'center' }]}>{children}</Text>
   </Pressable>;
 }
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
   nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.neutralButton },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(5) },
   button: { minHeight: s.control, padding: px(12), backgroundColor: c.brandYellow, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
-  inactive: { backgroundColor: c.neutralButton },
+  inactive: { backgroundColor: c.unselectedButton },
   fieldGroup: { gap: px(8) }, input: { ...t.body, minHeight: s.control, paddingHorizontal: px(18), paddingVertical: px(12), borderRadius: s.radius, backgroundColor: c.field, color: c.black },
   multiline: { minHeight: px(100), textAlignVertical: 'top' },
   info: { gap: px(6) }, infoRow: { flexDirection: 'row', alignItems: 'center', gap: px(12), minHeight: s.control, padding: px(12), borderRadius: s.radius, backgroundColor: c.row },

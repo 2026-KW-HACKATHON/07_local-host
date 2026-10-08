@@ -61,5 +61,5 @@ const styles = StyleSheet.create({
   loginText: { color: colors.black },
   later: { minHeight: px(48), justifyContent: 'center', marginTop: px(12), paddingHorizontal: px(16), borderRadius: px(12), backgroundColor: colors.brandYellow },
   laterText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
-  inactive: { backgroundColor: colors.neutralButton },
+  inactive: { backgroundColor: colors.unselectedButton },
 });

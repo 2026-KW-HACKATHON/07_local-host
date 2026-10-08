@@ -127,6 +127,6 @@ const styles = StyleSheet.create({
     gap: px(12),
   },
   signupLink: { alignSelf: 'center', marginTop: px(29), minHeight: px(44), paddingHorizontal: px(16), justifyContent: 'center', borderRadius: px(12), backgroundColor: colors.brandYellow },
-  inactive: { backgroundColor: colors.neutralButton },
+  inactive: { backgroundColor: colors.unselectedButton },
   signupText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
 });

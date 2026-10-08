@@ -100,5 +100,5 @@ const styles = StyleSheet.create({
   link: { fontFamily: fonts.medium, fontSize: px(18), lineHeight: px(26), color: colors.primary },
   card: { backgroundColor: colors.guest, padding: px(20), borderRadius: px(16), gap: px(12) },
   button: { backgroundColor: colors.brandYellow, padding: px(12), borderRadius: px(16) },
-  inactive: { backgroundColor: colors.neutralButton },
+  inactive: { backgroundColor: colors.unselectedButton },
 });

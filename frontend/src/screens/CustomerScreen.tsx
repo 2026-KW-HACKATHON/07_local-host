@@ -266,7 +266,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           <View style={styles.reportCard}><Text style={[t.heading, styles.centerText]}>혼잡도를 제보해 주세요!</Text>
             <View style={styles.levelChoices}>
             {levels.map(value => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: level === value, disabled: submitting }}
-              disabled={submitting} onPress={() => setLevel(value)} style={({ pressed }) => [styles.levelOption, (level === value || submitting || pressed) && styles.selectedRestaurant]}>
+              disabled={submitting} onPress={() => setLevel(value)} style={({ pressed }) => [styles.levelOption, level === value && styles.selectedRestaurant]}>
               <View style={[styles.levelDot, { backgroundColor: value === 'AVAILABLE' ? c.available : value === 'FEW_SEATS' ? c.fewSeats : c.longWait }]} />
               <Text style={[t.small, styles.centerText]}>{crowdLabels[value]}</Text>
               <Text style={styles.choiceState}>{level === value ? '선택됨' : '선택'}</Text>
@@ -317,10 +317,10 @@ const styles = StyleSheet.create({
   statusPanel: { padding: m.rowPadding, gap: px(12) },
   reportCard: { backgroundColor: c.dialog, padding: px(20), borderRadius: px(20), gap: px(24) },
   levelChoices: { flexDirection: 'row', gap: px(8) },
-  levelOption: { flex: 1, minHeight: px(126), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', padding: px(8), gap: px(8), borderRadius: px(12) },
+  levelOption: { flex: 1, minHeight: px(126), backgroundColor: c.unselectedButton, alignItems: 'center', justifyContent: 'center', padding: px(8), gap: px(8), borderRadius: px(12) },
   levelDot: { width: px(24), height: px(24), borderRadius: px(12) },
   choiceState: { ...t.small, color: c.muted }, centerText: { textAlign: 'center' },
-  selectedRestaurant: { backgroundColor: c.neutralButton, borderBottomWidth: 0 },
+  selectedRestaurant: { backgroundColor: c.selectedButton, borderBottomWidth: 0 },
   historyActionRow: { alignItems: 'flex-end', marginTop: px(-12) },
   historyAction: { minHeight: px(44), paddingHorizontal: px(16), backgroundColor: c.brandYellow, justifyContent: 'center', borderRadius: px(8) },
   couponEmpty: { backgroundColor: c.guest, borderRadius: px(10), padding: m.rowPadding, gap: px(8) },

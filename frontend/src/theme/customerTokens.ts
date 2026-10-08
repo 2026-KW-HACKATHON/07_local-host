@@ -1,10 +1,10 @@
 import { colors, fonts, px } from './tokens';
 
 // Figma 412×917 원본: 검색창 350×69/r10, 목록 r26,
-// 목록 배경 #AAE29F 15%, 하단 바 #D9D9D9/h89.
+// 목록 배경은 공통 연회색, 하단 바 #D9D9D9/h89.
 export const customerColors = {
   ...colors,
-  panel: 'rgba(170, 226, 159, 0.15)',
+  panel: colors.panelBackground,
   dialog: '#F5F5F5',
   searchText: 'rgba(0, 0, 0, 0.58)',
   divider: 'rgba(0, 0, 0, 0.35)',

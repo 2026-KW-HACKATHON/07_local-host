@@ -53,13 +53,13 @@ export function PromotionOptionsForm({ benefit, initial, initialPointsCost, busy
     <View style={styles.section}>
       <Text style={t.heading}>쿠폰 교환 포인트</Text>
       <Pressable accessibilityRole="button" accessibilityLabel="교환 포인트 선택" accessibilityState={{ expanded: pointsOpen, disabled: busy }} disabled={busy}
-        onPress={() => setPointsOpen(!pointsOpen)} style={({ pressed }) => [styles.pointsSelector, (busy || pointsOpen || pressed) && styles.disabled]}>
+        onPress={() => setPointsOpen(!pointsOpen)} style={[styles.pointsSelector, !!pointsText && styles.selected]}>
         <Text style={[t.body, styles.flex]}>{pointsText ? `${pointsText}P` : '포인트 선택'}</Text><Text style={t.body}>{pointsOpen ? '∧' : '∨'}</Text>
       </Pressable>
       {pointsOpen && <ScrollView nestedScrollEnabled style={styles.pointsMenu} contentContainerStyle={styles.pointsMenuContent}>
         {pointPresets.map(points => <Pressable key={points} accessibilityRole="radio" accessibilityLabel={`${points} 포인트`}
           accessibilityState={{ checked: pointsText === String(points), disabled: busy }} disabled={busy}
-          onPress={() => { setPointsText(String(points)); setPointsOpen(false); setError(''); }} style={({ pressed }) => [styles.pointsOption, (pointsText === String(points) || busy || pressed) && styles.selected]}>
+          onPress={() => { setPointsText(String(points)); setPointsOpen(false); setError(''); }} style={[styles.pointsOption, pointsText === String(points) && styles.selected]}>
           <Text style={t.body}>{points.toLocaleString('ko-KR')}P</Text>
         </Pressable>)}
       </ScrollView>}
@@ -70,14 +70,14 @@ export function PromotionOptionsForm({ benefit, initial, initialPointsCost, busy
       <Text style={t.heading}>프로모션 발행 종료일</Text>
       {!!expiryDescription && <Text style={[t.small, styles.note]}>{expiryDescription}</Text>}
       <Option label="유효기간 없음" checked={schedule.noEndDate} disabled={busy} onPress={() => update({ noEndDate: !schedule.noEndDate })} />
-      <OwnerButton secondary disabled={busy || schedule.noEndDate} onPress={() => setCalendar(true)}>{schedule.endDate || '종료일 선택'}</OwnerButton>
+      <OwnerButton selected={!schedule.noEndDate && !!schedule.endDate} secondary disabled={busy || schedule.noEndDate} onPress={() => setCalendar(true)}>{schedule.endDate || '종료일 선택'}</OwnerButton>
     </View>
     <View style={styles.section}>
       <Text style={t.heading}>쿠폰 사용 요일</Text>
       <Option label="요일 제한 없음" checked={schedule.unrestrictedDays} disabled={busy} onPress={() => update({ unrestrictedDays: !schedule.unrestrictedDays })} />
       <View style={styles.days}>{orderedDays.map(day => <Pressable key={day}
         accessibilityRole="checkbox" accessibilityLabel={`${weekdays[day]}요일 적용`} accessibilityState={{ checked: schedule.days.includes(day), disabled: busy || schedule.unrestrictedDays }}
-        disabled={busy || schedule.unrestrictedDays} onPress={() => selectDay(day)} style={({ pressed }) => [styles.day, (schedule.days.includes(day) || busy || schedule.unrestrictedDays || pressed) && styles.selected]}>
+        disabled={busy || schedule.unrestrictedDays} onPress={() => selectDay(day)} style={[styles.day, !schedule.unrestrictedDays && schedule.days.includes(day) && styles.selected]}>
         <Text style={t.body}>{weekdays[day]}</Text>
       </Pressable>)}</View>
     </View>
@@ -92,7 +92,7 @@ export function PromotionOptionsForm({ benefit, initial, initialPointsCost, busy
       {!schedule.unrestrictedDays && !schedule.days.length && <Text style={[t.small, styles.note]}>적용할 요일을 먼저 선택해 주세요.</Text>}
     </View>
     {!!error && <Text accessibilityRole="alert" style={[t.small, styles.error]}>{error}</Text>}
-    <OwnerButton disabled={busy} onPress={save}>{busy ? '발행 중...' : '발행하기'}</OwnerButton>
+    <OwnerButton selected={false} disabled={busy} onPress={save}>{busy ? '발행 중...' : '발행하기'}</OwnerButton>
     {calendar && <OwnerCalendar value={schedule.endDate} onSelect={endDate => update({ endDate })} onClose={() => setCalendar(false)} />}
   </View>;
 }
@@ -100,7 +100,7 @@ export function PromotionOptionsForm({ benefit, initial, initialPointsCost, busy
 function Option({ label, checked, disabled, onPress }: { label: string; checked: boolean; disabled: boolean; onPress: () => void }) {
   return <Pressable accessibilityRole="checkbox" accessibilityLabel={label} accessibilityState={{ checked, disabled }} disabled={disabled}
     onPress={onPress} style={styles.option}>
-    <View style={[styles.checkbox, (checked || disabled) && styles.selected]}><Text style={t.body}>{checked ? '✓' : ''}</Text></View>
+    <View style={[styles.checkbox, checked && styles.selected]}><Text style={t.body}>{checked ? '✓' : ''}</Text></View>
     <Text style={[t.body, styles.flex]}>{label}</Text>
   </Pressable>;
 }
@@ -109,7 +109,7 @@ function RangesEditor({ title, ranges, disabled, onChange }: { title: string; ra
   const change = (index: number, key: keyof PromotionTimeRange, value: string) => {
     if (!disabled) onChange(ranges.map((range, i) => i === index ? { ...range, [key]: value } : range));
   };
-  return <View style={[styles.ranges, disabled && styles.disabled]}>
+  return <View style={[styles.ranges, disabled && styles.readOnly]}>
     <Text style={t.body}>{title}</Text>
     {ranges.map((range, index) => <View key={index} style={styles.range}>
       <View style={styles.row}>
@@ -130,15 +130,15 @@ const styles = StyleSheet.create({
   form: { gap: px(24), paddingBottom: px(16) },
   benefit: { backgroundColor: c.row, borderRadius: px(16), padding: px(16) },
   section: { gap: px(12) },
-  pointsSelector: { flexDirection: 'row', gap: px(8), minHeight: px(58), backgroundColor: c.brandYellow, alignItems: 'center', borderRadius: px(12), paddingHorizontal: px(16) },
+  pointsSelector: { flexDirection: 'row', gap: px(8), minHeight: px(58), backgroundColor: c.unselectedButton, alignItems: 'center', borderRadius: px(12), paddingHorizontal: px(16) },
   pointsMenu: { maxHeight: px(190), borderRadius: px(12) },
   pointsMenuContent: { padding: px(4) },
-  pointsOption: { minHeight: px(48), paddingHorizontal: px(12), justifyContent: 'center', borderRadius: px(8) },
+  pointsOption: { minHeight: px(48), paddingHorizontal: px(12), justifyContent: 'center', borderRadius: px(8), backgroundColor: c.unselectedButton },
   days: { flexDirection: 'row', gap: px(4) },
-  day: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(8), backgroundColor: c.brandYellow },
-  selected: { backgroundColor: c.neutralButton, borderWidth: 0 },
+  day: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(8), backgroundColor: c.unselectedButton },
+  selected: { backgroundColor: c.selectedButton },
   option: { flexDirection: 'row', alignItems: 'center', gap: px(10), minHeight: px(44) },
-  checkbox: { width: px(26), height: px(26), borderWidth: 1, borderColor: c.border, borderRadius: px(4), alignItems: 'center', justifyContent: 'center' },
+  checkbox: { width: px(26), height: px(26), backgroundColor: c.unselectedButton, borderRadius: px(4), alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'flex-end', gap: px(8) },
   flex: { flex: 1 },
   tilde: { paddingBottom: px(18) },
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   range: { gap: px(4) },
   rangeFooter: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: px(8) },
   remove: { marginLeft: 'auto', minHeight: px(44), justifyContent: 'center', paddingHorizontal: px(4) },
-  disabled: { backgroundColor: c.neutralButton },
+  readOnly: { backgroundColor: c.neutralButton },
   note: { color: c.muted },
   error: { color: c.danger },
 });

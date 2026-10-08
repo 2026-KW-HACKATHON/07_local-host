@@ -20,5 +20,5 @@ const styles = StyleSheet.create({
   message: { ...t.body, textAlign: 'center', padding: px(24) },
   actions: { flexDirection: 'row', gap: px(8), padding: px(12) },
   action: { flex: 1, minHeight: px(58), borderRadius: px(12), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
-  inactive: { backgroundColor: c.neutralButton },
+  inactive: { backgroundColor: c.unselectedButton },
 });

@@ -171,10 +171,10 @@ const styles = StyleSheet.create({
     textAlignVertical: 'center',
   },
   pressed: {
-    backgroundColor: colors.neutralButton,
+    backgroundColor: colors.unselectedButton,
   },
   disabled: {
-    backgroundColor: colors.neutralButton,
+    backgroundColor: colors.unselectedButton,
   },
   field: {
     width: metrics.contentWidth,
