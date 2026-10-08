@@ -25,5 +25,5 @@ const styles = StyleSheet.create({ backdrop: { flex: 1, backgroundColor: 'rgba(0
   card: { backgroundColor: c.white, width: '100%', maxWidth: px(380), borderRadius: px(20), padding: px(12) },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, arrow: { minWidth: px(44), minHeight: px(44), alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' }, cell: { width: '14.2857%', minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(8) },
-  selected: { backgroundColor: c.guest }, close: { minHeight: px(48), alignItems: 'center', justifyContent: 'center' },
+  selected: { backgroundColor: c.brandYellow }, close: { minHeight: px(48), borderRadius: px(12), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
 });

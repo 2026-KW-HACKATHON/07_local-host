@@ -99,5 +99,5 @@ const styles = StyleSheet.create({
   text: { fontFamily: fonts.regular, fontSize: px(18), lineHeight: px(26), color: colors.black },
   link: { fontFamily: fonts.medium, fontSize: px(18), lineHeight: px(26), color: colors.primary },
   card: { backgroundColor: colors.guest, padding: px(20), borderRadius: px(16), gap: px(12) },
-  button: { backgroundColor: colors.white, padding: px(12), borderRadius: px(16) },
+  button: { backgroundColor: colors.brandYellow, padding: px(12), borderRadius: px(16) },
 });

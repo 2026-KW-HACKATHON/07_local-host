@@ -46,10 +46,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.koreanBold,
   },
   signupButton: {
-    height: px(29),
+    minHeight: px(44),
     marginTop: px(45),
     alignSelf: 'center',
     justifyContent: 'center',
+    paddingHorizontal: px(20),
+    borderRadius: px(12),
+    backgroundColor: colors.brandYellow,
   },
   signupText: {
     color: colors.black,

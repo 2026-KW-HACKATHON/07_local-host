@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   identity: { flex: 1, gap: px(4) },
   avatar: { width: px(100), height: px(100), borderRadius: px(50), backgroundColor: c.neutralButton, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
-  editButton: { minHeight: px(44), borderRadius: px(12), backgroundColor: c.neutralButton, alignItems: 'center', justifyContent: 'center', padding: px(8) },
+  editButton: { minHeight: px(44), borderRadius: px(12), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', padding: px(8) },
   editor: { flex: 1, backgroundColor: c.white },
   editorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: m.gutter, paddingTop: px(24), paddingBottom: px(12) },
   editorContent: { padding: m.gutter, paddingBottom: px(40), gap: px(22) },

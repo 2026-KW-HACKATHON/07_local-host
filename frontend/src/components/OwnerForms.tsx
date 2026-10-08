@@ -119,7 +119,7 @@ export function ScheduleForm({ draft, mode, busy, onSave, restaurant }: {
 }
 const styles = StyleSheet.create({ form: { gap: px(24), paddingBottom: px(16) }, row: { flexDirection: 'row', gap: px(16) }, flex: { flex: 1 }, error: { ...t.small, color: c.danger },
   group: { gap: px(12), padding: px(16), borderWidth: 1, borderColor: c.border, borderRadius: px(12) }, closedGroup: { padding: px(10) }, secondaryText: { color: c.muted },
-  days: { flexDirection: 'row', flexWrap: 'wrap', gap: px(4) }, day: { minWidth: px(44), minHeight: px(48), borderRadius: px(10), backgroundColor: c.row, alignItems: 'center', justifyContent: 'center' },
-  scheduleOption: { flex: 1, gap: px(4), minHeight: px(72), backgroundColor: c.row, borderRadius: px(12), alignItems: 'center', justifyContent: 'center' },
+  days: { flexDirection: 'row', flexWrap: 'wrap', gap: px(4) }, day: { minWidth: px(44), minHeight: px(48), borderRadius: px(10), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
+  scheduleOption: { flex: 1, gap: px(4), minHeight: px(72), backgroundColor: c.brandYellow, borderRadius: px(12), alignItems: 'center', justifyContent: 'center' },
   selected: { backgroundColor: c.edit, borderWidth: 1, borderColor: c.black },
 });

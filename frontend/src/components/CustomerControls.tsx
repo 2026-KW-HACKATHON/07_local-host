@@ -17,8 +17,8 @@ export function CustomerNavigation({ selected, onSelect }: {
     {tabs.map(({ key, label }) => <Pressable key={key} testID={`customer-tab-${key}`}
       accessibilityRole="tab" accessibilityLabel={label} accessibilityState={{ selected: selected === key }}
       onPress={() => onSelect(key)} style={styles.tab}>
-      <View style={styles.iconSlot} pointerEvents="none"><AppIcon name={key === 'home' ? 'home' : key === 'report' ? 'marketing' : 'person'} size={30} color={selected === key ? c.black : c.white} /></View>
-      <Text style={[styles.tabLabel, { color: selected === key ? c.black : c.white }]}>{label}</Text>
+      <View style={styles.iconSlot} pointerEvents="none"><AppIcon name={key === 'home' ? 'home' : key === 'report' ? 'marketing' : 'person'} size={30} color={selected === key ? c.black : c.muted} /></View>
+      <Text style={[styles.tabLabel, { color: selected === key ? c.black : c.muted }]}>{label}</Text>
     </Pressable>)}
   </View>;
 }
@@ -54,17 +54,17 @@ export function CustomerButton({ children, onPress, disabled = false }: PropsWit
 }
 
 const styles = StyleSheet.create({
-  navigation: { height: m.navigationHeight, flexDirection: 'row', backgroundColor: c.neutralButton },
+  navigation: { height: m.navigationHeight, flexDirection: 'row', backgroundColor: c.brandYellow },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(4) },
   iconSlot: { width: m.iconSlot, height: m.iconSlot, alignItems: 'center', justifyContent: 'center' },
   tabLabel: { ...t.small, fontWeight: '400' },
   search: { width: m.searchWidth, maxWidth: '100%', minHeight: m.searchHeight, flexDirection: 'row', alignItems: 'center', gap: px(12),
     borderRadius: m.searchRadius, backgroundColor: c.neutralButton, paddingHorizontal: px(20) },
   searchInput: { ...t.heading, flex: 1, minHeight: m.searchHeight, paddingVertical: px(12), color: c.black, includeFontPadding: false, textAlignVertical: 'center' },
-  searchAction: { minWidth: px(44), minHeight: px(48), alignItems: 'center', justifyContent: 'center' },
+  searchAction: { minWidth: px(44), minHeight: px(48), paddingHorizontal: px(8), borderRadius: px(10), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
   badge: { flexDirection: 'row', alignItems: 'center', gap: px(8), flexShrink: 1 },
   dot: { width: px(18), height: px(18), borderRadius: px(9) },
-  button: { minHeight: px(62), backgroundColor: c.primary, borderRadius: px(16), justifyContent: 'center', alignItems: 'center', padding: px(12) },
+  button: { minHeight: px(62), backgroundColor: c.brandYellow, borderRadius: px(16), justifyContent: 'center', alignItems: 'center', padding: px(12) },
   disabled: { opacity: 0.45 },
-  buttonLabel: { color: c.white, textAlign: 'center' },
+  buttonLabel: { color: c.black, textAlign: 'center' },
 });

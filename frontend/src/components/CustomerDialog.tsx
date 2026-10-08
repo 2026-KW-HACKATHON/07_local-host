@@ -19,5 +19,5 @@ const styles = StyleSheet.create({
   title: { ...t.heading, textAlign: 'center', paddingTop: px(24), paddingHorizontal: px(20) },
   message: { ...t.body, textAlign: 'center', padding: px(24) },
   actions: { flexDirection: 'row', borderTopWidth: StyleSheet.hairlineWidth, borderColor: c.divider },
-  action: { flex: 1, minHeight: px(58), alignItems: 'center', justifyContent: 'center', borderRightWidth: StyleSheet.hairlineWidth, borderColor: c.divider },
+  action: { flex: 1, minHeight: px(58), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', borderRightWidth: StyleSheet.hairlineWidth, borderColor: c.divider },
 });

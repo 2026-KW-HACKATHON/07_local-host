@@ -83,7 +83,7 @@ export function CustomerCouponWallet({ user, wallet, now, disabled, onChanged }:
     .filter(coupon => ['expired', 'used'].includes(couponStatus(coupon, now)) === (filter === 'history'));
   return <View style={styles.group}><Text style={t.heading}>내 쿠폰함</Text>
     <View style={styles.filters}>{(['available', 'history'] as const).map(value => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: filter === value }}
-      onPress={() => setFilter(value)} style={[styles.filter, filter === value && styles.selected]}><Text style={[t.small, filter === value && { color: c.white }]}>{value === 'available' ? '보유 쿠폰' : '사용·만료'}</Text></Pressable>)}</View>
+      onPress={() => setFilter(value)} style={[styles.filter, filter === value && styles.selected]}><Text style={t.small}>{value === 'available' ? '보유 쿠폰' : '사용·만료'}</Text></Pressable>)}</View>
     <Text style={[t.small, styles.muted]}>유효기한: 다운 후 3일 이내</Text>
     {!coupons.length && <Text style={t.body}>{filter === 'available' ? '받은 쿠폰이 없어요.' : '사용·만료된 쿠폰이 없어요.'}</Text>}
     {coupons.map(coupon => {
@@ -105,6 +105,6 @@ const styles = StyleSheet.create({
   card: { gap: px(12), padding: px(18), borderRadius: px(16), backgroundColor: c.guest },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: px(12) }, flex: { flex: 1 },
   muted: { color: c.muted }, filters: { flexDirection: 'row', gap: px(8) },
-  filter: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(12), backgroundColor: c.neutralButton },
-  selected: { backgroundColor: c.black },
+  filter: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(12), backgroundColor: c.brandYellow },
+  selected: { borderWidth: 1, borderColor: c.black },
 });

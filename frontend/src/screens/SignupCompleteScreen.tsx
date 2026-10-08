@@ -38,7 +38,7 @@ export function SignupCompleteScreen({ onLogin, onLater }: {
       {error && <Text accessibilityRole="alert" style={styles.error}>
         가입은 완료됐지만 로그인하지 못했어요.{ '\n' }{error}
       </Text>}
-      <FigmaButton backgroundColor={colors.primary} loading={loading}
+      <FigmaButton loading={loading}
         onPress={() => void login()} style={styles.login} textStyle={styles.loginText}>
         {error ? '다시 로그인' : '바로 로그인'}
       </FigmaButton>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
   description: { color: colors.muted, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24), marginTop: px(12), textAlign: 'center' },
   error: { color: colors.danger, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24), marginTop: px(24), textAlign: 'center' },
   login: { marginTop: px(32) },
-  loginText: { color: colors.white },
-  later: { minHeight: px(48), justifyContent: 'center', marginTop: px(12) },
-  laterText: { color: colors.muted, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
+  loginText: { color: colors.black },
+  later: { minHeight: px(48), justifyContent: 'center', marginTop: px(12), paddingHorizontal: px(16), borderRadius: px(12), backgroundColor: colors.brandYellow },
+  laterText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
 });

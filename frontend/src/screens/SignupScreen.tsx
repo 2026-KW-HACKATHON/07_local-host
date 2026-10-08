@@ -117,7 +117,6 @@ export function SignupScreen({
         <SocialButton onPress={() => showSocialSetup('네이버')} provider="naver" />
       </View>
       <FigmaButton
-        backgroundColor={colors.primary}
         onPress={submit}
         style={styles.confirmButton}
         textStyle={styles.confirmText}
@@ -155,6 +154,6 @@ const styles = StyleSheet.create({
     marginLeft: px(15),
   },
   confirmText: {
-    color: colors.white,
+    color: colors.black,
   },
 });

@@ -30,7 +30,7 @@ type FigmaButtonProps = PropsWithChildren<{
 
 export function FigmaButton({
   accessibilityLabel,
-  backgroundColor = colors.neutralButton,
+  backgroundColor = colors.brandYellow,
   children,
   disabled = false,
   loading = false,
@@ -56,7 +56,7 @@ export function FigmaButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.white} size="small" />
+        <ActivityIndicator color={colors.black} size="small" />
       ) : (
         <Text allowFontScaling={false} style={[styles.buttonText, textStyle]}>
           {children}
@@ -139,7 +139,6 @@ export function SocialButton({
 
   return (
     <FigmaButton
-      backgroundColor={isGoogle ? colors.google : colors.naver}
       onPress={onPress}
     >
       {isGoogle ? 'Google로 계속하기' : '네이버로 계속하기'}
@@ -205,7 +204,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: metrics.controlRadius,
-    backgroundColor: colors.white,
+    backgroundColor: colors.brandYellow,
   },
   fieldActionText: {
     color: colors.black,

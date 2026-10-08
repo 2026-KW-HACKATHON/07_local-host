@@ -11,8 +11,8 @@ export function OwnerNavigation({ tab, onSelect, disabled }: { tab: OwnerTab; on
   ] as const).map(([value, label, icon]) => <Pressable key={value} accessibilityRole="tab" accessibilityLabel={label}
     accessibilityState={{ selected: tab === value, disabled }} disabled={disabled} testID={`owner-tab-${value}`}
     onPress={() => onSelect(value)} style={styles.tab}>
-    <AppIcon name={icon} size={30} color={tab === value ? c.black : c.white} />
-    <Text style={[t.small, { color: tab === value ? c.black : c.white }]}>{label}</Text>
+    <AppIcon name={icon} size={30} color={tab === value ? c.black : c.muted} />
+    <Text style={[t.small, { color: tab === value ? c.black : c.muted }]}>{label}</Text>
   </Pressable>)}</View>;
 }
 export function OwnerButton({ children, onPress, disabled = false, secondary = false }: PropsWithChildren<{
@@ -20,7 +20,7 @@ export function OwnerButton({ children, onPress, disabled = false, secondary = f
 }>) {
   return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
     style={({ pressed }) => [styles.button, secondary && styles.secondary, (disabled || pressed) && styles.dim]}>
-    <Text style={[t.body, { color: secondary ? c.black : c.white, textAlign: 'center' }]}>{children}</Text>
+    <Text style={[t.body, { color: c.black, textAlign: 'center' }]}>{children}</Text>
   </Pressable>;
 }
 export function OwnerField({ label, ...props }: TextInputProps & { label: string }) {
@@ -37,10 +37,10 @@ export function OwnerBack({ onPress, disabled }: { onPress: () => void; disabled
   return <Pressable accessibilityRole="button" accessibilityLabel="이전 화면으로 돌아가기" disabled={disabled} onPress={onPress} style={styles.back}><Text style={t.body}>‹ 뒤로</Text></Pressable>;
 }
 const styles = StyleSheet.create({
-  nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.neutralButton },
+  nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.brandYellow },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(5) },
-  button: { minHeight: s.control, padding: px(12), backgroundColor: c.primary, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
-  secondary: { backgroundColor: c.row }, dim: { opacity: 0.45 },
+  button: { minHeight: s.control, padding: px(12), backgroundColor: c.brandYellow, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
+  secondary: { borderWidth: 1, borderColor: c.border }, dim: { opacity: 0.45 },
   fieldGroup: { gap: px(8) }, input: { ...t.body, minHeight: s.control, paddingHorizontal: px(18), paddingVertical: px(12), borderRadius: s.radius, backgroundColor: c.field, color: c.black },
   multiline: { minHeight: px(100), textAlignVertical: 'top' },
   info: { gap: px(6) }, infoRow: { flexDirection: 'row', alignItems: 'center', gap: px(12), minHeight: s.control, padding: px(12), borderRadius: s.radius, backgroundColor: c.row },

@@ -82,7 +82,6 @@ export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: Lo
         />
       </View>
       <FigmaButton
-        backgroundColor={colors.primary}
         loading={loading}
         onPress={() => void submit()}
         style={styles.loginButton}
@@ -120,13 +119,13 @@ const styles = StyleSheet.create({
     marginLeft: px(15),
   },
   loginButtonText: {
-    color: colors.white,
+    color: colors.black,
   },
   socials: {
     marginTop: px(32),
     marginLeft: px(15),
     gap: px(12),
   },
-  signupLink: { alignSelf: 'center', marginTop: px(29) },
+  signupLink: { alignSelf: 'center', marginTop: px(29), minHeight: px(44), paddingHorizontal: px(16), justifyContent: 'center', borderRadius: px(12), backgroundColor: colors.brandYellow },
   signupText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
 });
