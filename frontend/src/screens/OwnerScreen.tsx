@@ -6,6 +6,7 @@ import { reportCrowd } from '../api/crowd';
 import { getManagedPromotions } from '../api/promotions';
 import { getApiErrorMessage } from '../api/errorMessage';
 import type { Promotion, Restaurant, RestaurantWriteRequest, ReportableCrowdLevel } from '../api/types';
+import { isTemporaryPromotion } from '../customer/restaurantList';
 import { HeaderLogo } from '../components/BrandAssets';
 import { CrowdBadge, crowdLabels } from '../components/CustomerControls';
 import { CustomerDialog, type CustomerDialogState } from '../components/CustomerDialog';
@@ -157,8 +158,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
     message: `${promotion.benefit}\n새 다운로드가 중단돼요. 이미 받은 쿠폰은 각자의 만료 시각까지 사용할 수 있어요.`, cancel: '돌아가기', confirm: '발행 취소',
     onConfirm: () => { void mutate(async () => { await cancelDevicePromotion(user!, promotion.id); await coupons.refresh(); }); } });
   const published = coupons.promotions.filter(p => p.ownerKey === (user ? deviceUserKey(user) : '') && p.restaurantId === selectedId && isPromotionDownloadable(p, coupons.now));
-  const activeOffers = promotions?.filter(p => p.enabled && koreaObservationTime(p.startAt) <= Date.now() && koreaObservationTime(p.endAt) >= Date.now()
-    && p.title.replace(/\s+/g, '') !== '점심10%할인') ?? [];
+  const activeOffers = promotions?.filter(p => !isTemporaryPromotion(p) && p.enabled && koreaObservationTime(p.startAt) <= Date.now() && koreaObservationTime(p.endAt) >= Date.now()) ?? [];
   const activeStages = published.map(p => `${p.stage}단계 · ${p.benefit}`);
   const activeLabels = [...activeStages, ...activeOffers.map(p => p.title)];
   const businessChange = draft?.businessChange;

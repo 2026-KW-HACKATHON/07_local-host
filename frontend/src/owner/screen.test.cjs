@@ -65,6 +65,7 @@ function fixture({ tab = 'report', page = 'main', draft = defaults(), selected =
     };
     if (id.endsWith('AuthContext')) return { useAuth: () => ({ user: { id: 2, nickname: '점주', email: 'owner@example.test', role: 'OWNER' }, token: 'fixture-only', logout: async () => {} }) };
     if (id.endsWith('/restaurants') || id.endsWith('/crowd') || id.endsWith('/promotions')) return dependencies;
+    if (id.endsWith('/customer/restaurantList')) return { isTemporaryPromotion: () => false };
     if (id.endsWith('/errorMessage')) return { getApiErrorMessage: error => error.message };
     if (id.endsWith('/drafts')) return { ...dependencies, emptyOwnerDraft: empty };
     if (id.endsWith('/reports')) return dependencies;

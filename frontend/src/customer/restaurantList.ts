@@ -4,6 +4,10 @@ export type RestaurantSummary = { restaurant: Restaurant; crowd: CrowdStatusResp
 export type RestaurantSort = '거리순' | '여유순' | '프로모션';
 const rank = { AVAILABLE: 0, FEW_SEATS: 1, LONG_WAIT: 2, UNKNOWN: 3 };
 
+export function isTemporaryPromotion(promotion: Pick<Promotion, 'title'>) {
+  return typeof promotion.title === 'string' && promotion.title.replace(/\s+/g, '') === '점심10%할인';
+}
+
 export function distanceLabel(meters: number | undefined) {
   if (meters === undefined || !Number.isFinite(meters) || meters < 0) return '거리 확인 전';
   return meters < 1000 ? `${Math.round(meters)}m` : `${(meters / 1000).toFixed(1)}km`;
@@ -41,5 +45,5 @@ export function restaurantMapQuery(restaurant: Pick<Restaurant, 'address'>) {
 }
 
 export function activeBenefits(promotions: Promotion[] | null, now = Date.now()) {
-  return promotions?.filter(item => item.enabled && item.active && Date.parse(item.startAt) <= now && Date.parse(item.endAt) > now) ?? [];
+  return promotions?.filter(item => !isTemporaryPromotion(item) && item.enabled && item.active && Date.parse(item.startAt) <= now && Date.parse(item.endAt) > now) ?? [];
 }

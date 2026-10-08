@@ -7,7 +7,7 @@ const result = { exports: {} };
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(`${__dirname}/restaurantList.ts`, 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText, { exports: result.exports, Date });
-const { selectRestaurants, activeBenefits, naverSearchUrls, restaurantMapQuery, distanceLabel } = result.exports;
+const { selectRestaurants, activeBenefits, isTemporaryPromotion, naverSearchUrls, restaurantMapQuery, distanceLabel } = result.exports;
 const customerScreenSource = fs.readFileSync(`${__dirname}/../screens/CustomerScreen.tsx`, 'utf8');
 const promo = { id: 1, enabled: true, active: true, startAt: '2020-01-01T00:00:00Z', endAt: '2090-01-01T00:00:00Z' };
 const rows = [
@@ -51,6 +51,12 @@ test('only active, enabled, unexpired benefits are shown, never coupon ownership
   assert.equal(activeBenefits([promo, expired, { ...promo, active: false }, { ...promo, enabled: false }]).length, 1);
   assert.equal(activeBenefits(null).length, 0);
   assert.deepEqual(ids(selectRestaurants(rows, '', '프로모션', {})), [1]);
+});
+
+test('temporary lunch promotion is hidden from customer and owner promotion lists', () => {
+  const temporary = { ...promo, title: '점심 10%할인' };
+  assert.equal(isTemporaryPromotion(temporary), true);
+  assert.equal(activeBenefits([temporary]).length, 0);
 });
 
 test('promotion filter also shows restaurants with downloadable device coupons', () => {
