@@ -2,6 +2,8 @@ package bapjul.crowd.controller;
 
 import bapjul.crowd.dto.CrowdChartResponse;
 import bapjul.crowd.dto.CrowdReportResponse;
+import bapjul.crowd.dto.CrowdReportItem;
+import org.springframework.data.domain.Page;
 import bapjul.crowd.dto.CrowdStatusResponse;
 import bapjul.crowd.dto.CrowdStatusUpdateRequest;
 import bapjul.crowd.service.CrowdService;
@@ -47,6 +49,14 @@ public class CrowdController {
         return crowdService.getCurrentStatus(
                 restaurantId
         );
+    }
+
+    @GetMapping("/{restaurantId}/crowd/reports")
+    public Page<CrowdReportItem> getRestaurantReports(
+            @PathVariable Long restaurantId,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+        return crowdService.getRestaurantReports(restaurantId, page, size);
     }
 
     @GetMapping("/{restaurantId}/crowd/chart")

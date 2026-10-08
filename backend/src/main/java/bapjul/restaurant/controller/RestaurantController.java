@@ -34,8 +34,11 @@ public class RestaurantController {
     }
 
     @GetMapping
-    public List<RestaurantResponse> getRestaurants() {
-        return restaurantService.getRestaurants();
+    public List<RestaurantResponse> getRestaurants(
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude
+    ) {
+        return restaurantService.getRestaurants(latitude, longitude);
     }
 
     @GetMapping("/{restaurantId}")

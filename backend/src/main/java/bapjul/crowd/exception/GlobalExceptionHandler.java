@@ -21,6 +21,10 @@ import bapjul.promotion.exception.PromotionNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> invalidArgument(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+    }
 
     @ExceptionHandler(CrowdDataNotFoundException.class)
     public ResponseEntity<Map<String, String>>

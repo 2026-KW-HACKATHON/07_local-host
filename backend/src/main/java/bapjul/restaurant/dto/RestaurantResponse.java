@@ -8,6 +8,9 @@ public record RestaurantResponse(
         String address,
         LocalTime openingTime,
         LocalTime closingTime,
-        Long ownerId
-) {
-}
+        Long ownerId,
+        Double latitude,
+        Double longitude,
+        String floor,
+        Double distanceMeters
+) {}

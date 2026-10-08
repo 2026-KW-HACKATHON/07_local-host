@@ -5,6 +5,9 @@ import bapjul.crowd.domain.CrowdSnapshot;
 import bapjul.crowd.dto.CrowdChartPoint;
 import bapjul.crowd.dto.CrowdChartResponse;
 import bapjul.crowd.dto.CrowdReportResponse;
+import bapjul.crowd.dto.CrowdReportItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import bapjul.crowd.dto.CrowdStatusResponse;
 import bapjul.crowd.dto.CrowdStatusUpdateRequest;
 import bapjul.crowd.exception.InvalidCrowdReportException;
@@ -86,6 +89,27 @@ public class CrowdService {
                 repository.save(snapshot);
 
         return toReportResponse(saved);
+    }
+
+    public Page<CrowdReportItem> getRestaurantReports(Long restaurantId, int page, int size) {
+        if (!restaurantRepository.existsById(restaurantId)) {
+            throw new RestaurantNotFoundException("식당을 찾을 수 없습니다.");
+        }
+        return repository.findByRestaurant_IdOrderByObservedAtDescIdDesc(restaurantId,
+                PageRequest.of(page, size)).map(this::toReportItem);
+    }
+
+    public Page<CrowdReportItem> getMyReports(String reporterEmail, int page, int size) {
+        User user = userRepository.findByEmail(reporterEmail)
+                .orElseThrow(() -> new InvalidCrowdReportException("사용자 정보를 찾을 수 없습니다."));
+        return repository.findByReporter_IdOrderByObservedAtDescIdDesc(user.getId(),
+                PageRequest.of(page, size)).map(this::toReportItem);
+    }
+
+    private CrowdReportItem toReportItem(CrowdSnapshot snapshot) {
+        return new CrowdReportItem(snapshot.getId(), snapshot.getRestaurant().getId(),
+                snapshot.getRestaurant().getName(), snapshot.getReporter().getNickname(),
+                snapshot.getLevel(), snapshot.getLevel().getLabel(), snapshot.getObservedAt());
     }
 
     public CrowdStatusResponse getCurrentStatus(

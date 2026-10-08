@@ -49,6 +49,9 @@ public class SecurityConfig {
                                 "/api/auth/login"
                         ).permitAll()
 
+                        // 개인 제보 내역은 반드시 인증 후 조회
+                        .requestMatchers(HttpMethod.GET, "/api/crowd/reports/me").authenticated()
+
                         // 내 정보
                         .requestMatchers(
                                 "/api/auth/me"
