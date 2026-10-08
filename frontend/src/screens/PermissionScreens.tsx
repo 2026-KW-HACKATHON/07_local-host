@@ -1,19 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Alert, Linking, PermissionsAndroid, Platform, StyleSheet } from 'react-native';
+import { Alert, Linking, PermissionsAndroid, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { isRunningInExpoGo } from 'expo';
 
-import { BrandComposition } from '../components/BrandAssets';
-import { DesignScreen } from '../components/DesignScreen';
-import { colors, px } from '../theme/tokens';
-
-function PermissionBackdrop() {
-  return (
-    <DesignScreen backgroundColor={colors.brandYellow}>
-      <BrandComposition style={styles.brand} />
-    </DesignScreen>
-  );
-}
+import { OnboardingBackdrop } from '../components/OnboardingBackdrop';
 
 function showSettingsAlert(title: string, message: string): Promise<void> {
   return new Promise(resolve => Alert.alert(title, message, [
@@ -60,7 +50,7 @@ export function LocationPermissionScreen({ onDone }: { onDone: () => void }) {
     };
   }, [onDone]);
 
-  return <PermissionBackdrop />;
+  return <OnboardingBackdrop />;
 }
 
 export function NotificationPermissionScreen({ onDone }: { onDone: () => void }) {
@@ -117,12 +107,5 @@ export function NotificationPermissionScreen({ onDone }: { onDone: () => void })
     };
   }, [onDone]);
 
-  return <PermissionBackdrop />;
+  return <OnboardingBackdrop />;
 }
-
-const styles = StyleSheet.create({
-  brand: {
-    alignSelf: 'center',
-    marginTop: px(337),
-  },
-});

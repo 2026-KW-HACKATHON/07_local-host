@@ -89,9 +89,9 @@ function ProfileEditor({ user, initial, pickImmediately, onClose, onSaved }: {
             style={styles.input} />
         </View>
         <View style={styles.fieldGroup}><Text style={t.body}>로그인 이메일</Text><Text selectable style={[t.body, styles.muted]}>{user.email}</Text></View>
-        <View style={styles.notice}><Text style={[t.small, styles.muted]}>변경한 닉네임과 사진은 이 기기에만 저장돼요. 로그인 이메일과 서버 회원정보는 바뀌지 않아요.</Text></View>
+        <View style={styles.notice}><Text style={[t.small, styles.muted]}>닉네임과 사진을 저장합니다. 로그인 이메일은 바뀌지 않아요.</Text></View>
         {!!error && <Text accessibilityRole="alert" style={[t.small, styles.error]}>{error}</Text>}
-        <CustomerButton onPress={() => void save()} disabled={busy}>{busy ? '처리 중…' : '이 기기에 저장'}</CustomerButton>
+        <CustomerButton onPress={() => void save()} disabled={busy}>{busy ? '처리 중…' : '저장'}</CustomerButton>
       </ScrollView>
     </KeyboardAvoidingView>
   </Modal>;
@@ -120,10 +120,10 @@ function CustomerProfileContent({ user }: { user: User }) {
     </View>
     {loading ? <ActivityIndicator accessibilityLabel="프로필 불러오는 중" /> : error
       ? <View style={styles.fieldGroup}><Text accessibilityRole="alert" style={[t.small, styles.error]}>{error}</Text><CustomerButton onPress={() => setLoadAttempt(attempt => attempt + 1)}>다시 불러오기</CustomerButton></View>
-      : <Pressable accessibilityRole="button" testID="customer-profile-edit" onPress={() => { setSavedMessage(''); setEditor('profile'); }} style={styles.editButton}><Text style={t.small}>프로필 수정</Text></Pressable>}
+      : <Pressable accessibilityRole="button" testID="customer-profile-edit" onPress={() => { setSavedMessage(''); setEditor('profile'); }} style={({ pressed }) => [styles.editButton, pressed && styles.inactive]}><Text style={t.small}>프로필 수정</Text></Pressable>}
     {!!savedMessage && <Text accessibilityLiveRegion="polite" style={[t.small, styles.muted]}>{savedMessage}</Text>}
     {editor && <ProfileEditor user={user} initial={profile} pickImmediately={editor === 'photo'} onClose={() => setEditor(null)}
-      onSaved={saved => { setProfile(saved); setEditor(null); setSavedMessage('프로필을 이 기기에 저장했어요.'); }} />}
+      onSaved={saved => { setProfile(saved); setEditor(null); setSavedMessage('프로필을 저장했어요.'); }} />}
   </View>;
 }
 
@@ -138,7 +138,8 @@ const styles = StyleSheet.create({
   identity: { flex: 1, gap: px(4) },
   avatar: { width: px(100), height: px(100), borderRadius: px(50), backgroundColor: c.neutralButton, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
-  editButton: { minHeight: px(44), borderRadius: px(12), backgroundColor: c.neutralButton, alignItems: 'center', justifyContent: 'center', padding: px(8) },
+  editButton: { minHeight: px(44), borderRadius: px(12), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', padding: px(8) },
+  inactive: { backgroundColor: c.unselectedButton },
   editor: { flex: 1, backgroundColor: c.white },
   editorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: m.gutter, paddingTop: px(24), paddingBottom: px(12) },
   editorContent: { padding: m.gutter, paddingBottom: px(40), gap: px(22) },

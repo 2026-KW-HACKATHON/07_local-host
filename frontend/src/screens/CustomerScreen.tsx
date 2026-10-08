@@ -20,7 +20,7 @@ import { awardDeviceReportPoints } from '../coupons/deviceStore';
 import { isPromotionDownloadable } from '../coupons/model';
 import { getEligibleStayRestaurants, getStayStatus, isStayReportLink } from '../location/stayService';
 import { useStayReportPrompt } from '../location/useStayReportPrompt';
-import { activeBenefits, distanceLabel, naverSearchUrls, RESTAURANT_PAGE_SIZE, selectRestaurants, type RestaurantSort, type RestaurantSummary } from '../customer/restaurantList';
+import { activeBenefits, distanceLabel, naverSearchUrls, restaurantMapQuery, selectRestaurants, type RestaurantSummary } from '../customer/restaurantList';
 import { CustomerButton, CustomerNavigation, CustomerSearch, CrowdBadge, crowdLabels, type CustomerTab } from '../components/CustomerControls';
 import { customerColors as c, customerMetrics as m, customerType as t } from '../theme/customerTokens';
 import { metrics, px } from '../theme/tokens';
@@ -40,10 +40,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const [dialog, setDialog] = useState<CustomerDialogState | null>(null);
   const [query, setQuery] = useState('');
   const [naverQuery, setNaverQuery] = useState<string | null>(null);
-  const [sort, setSort] = useState<RestaurantSort>('거리순');
-  const [visibleCount, setVisibleCount] = useState(RESTAURANT_PAGE_SIZE);
   const [distances, setDistances] = useState<Record<string, number>>({});
-  const [sortOpen, setSortOpen] = useState(false);
   const [rows, setRows] = useState<RestaurantSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -116,8 +113,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const selectTab = (next: CustomerTab) => {
     if (reportInFlight.current) return;
     setTab(next); setQuery(''); setSelectedId(null); setShowChart(false);
-    setSortOpen(false); setShowHistory(false); setReportId(null); setLevel(null);
-    setVisibleCount(RESTAURANT_PAGE_SIZE);
+    setShowHistory(false); setReportId(null); setLevel(null);
   };
   useStayReportPrompt(() => { setNaverQuery(null); setDialog(null); selectTab('report'); });
   useEffect(() => {
@@ -133,8 +129,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
 
   const couponRows = useMemo(() => rows.map(row => ({ ...row, deviceCouponCount: coupons.promotions.filter(p =>
     p.restaurantId === row.restaurant.id && isPromotionDownloadable(p, coupons.now)).length })), [rows, coupons.promotions, coupons.now]);
-  const filtered = useMemo(() => selectRestaurants(couponRows, query, sort, distances), [couponRows, query, sort, distances]);
-  useEffect(() => { setVisibleCount(RESTAURANT_PAGE_SIZE); }, [query, sort]);
+  const filtered = useMemo(() => selectRestaurants(couponRows, query, '거리순', distances), [couponRows, query, distances]);
   const selected = rows.find(row => row.restaurant.id === selectedId);
   const reportRestaurant = rows.find(row => row.restaurant.id === reportId)?.restaurant;
   const selectedBenefits = activeBenefits(selected?.promotions ?? null);
@@ -145,10 +140,10 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       const result = await awardDeviceReportPoints(user, response);
       await coupons.refresh();
       setDialog({ title: '제보가 완료됐어요', message: result.awarded
-        ? `식당의 혼잡도를 알려주셔서 고마워요.\n+${result.awarded.toLocaleString('ko-KR')}P · 기기 테스트 적립\n현재 ${result.balance.toLocaleString('ko-KR')}P`
-        : `제보 포인트가 이미 반영됐어요.\n현재 ${result.balance.toLocaleString('ko-KR')}P · 기기 테스트`, confirm: '확인' });
+        ? `식당의 혼잡도를 알려주셔서 고마워요.\n+${result.awarded.toLocaleString('ko-KR')}P 적립\n현재 ${result.balance.toLocaleString('ko-KR')}P`
+        : `제보 포인트가 이미 반영됐어요.\n현재 ${result.balance.toLocaleString('ko-KR')}P`, confirm: '확인' });
     } catch {
-      setDialog({ title: '제보는 저장됐어요', message: '포인트를 이 기기에 저장하지 못했어요. 제보를 다시 보내지 않고 적립만 다시 시도할 수 있어요.',
+      setDialog({ title: '제보는 저장됐어요', message: '포인트를 저장하지 못했어요. 제보를 다시 보내지 않고 적립만 다시 시도할 수 있어요.',
         cancel: '닫기', confirm: '적립 다시 시도', onConfirm: () => { void creditReport(response); } });
     }
   };
@@ -156,7 +151,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const submit = async () => {
     if (!token || !user || !reportRestaurant || !level || reportInFlight.current) return;
     if (!isConfirmedCandidate(reportRestaurant.id)) {
-      Alert.alert('GPS 체류 확인이 필요해요', '체류 확인을 시작하고 5분 후 추천된 식당을 선택해 주세요. Expo Go에서는 제보 화면을 미리볼 수 있지만 GPS 확인과 제출은 APK가 필요해요.', [{ text: '확인' }]);
+      Alert.alert('GPS 체류 확인이 필요해요', '체류 확인을 시작하고 5분 후 추천된 식당을 선택해 주세요.', [{ text: '확인' }]);
       return;
     }
     reportInFlight.current = true;
@@ -176,7 +171,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       cancel: '아니요', confirm: '예', onConfirm: () => { void submit(); } });
   };
   const openMap = async (restaurant: Restaurant) => {
-    await searchNaver(`${restaurant.name} ${restaurant.address}`);
+    await searchNaver(restaurantMapQuery(restaurant));
   };
   const searchNaver = async (text = query) => {
     const urls = naverSearchUrls(text);
@@ -203,7 +198,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
     <Text style={[t.small, styles.muted]}>{query.trim() ? '검색 버튼을 누르면 네이버 지도에서 더 많은 식당을 찾을 수 있어요.' : '점주가 식당을 등록하면 이곳에 표시돼요.'}</Text>
   </View>;
   const list = <>
-    {filtered.length ? filtered.slice(0, visibleCount).map(row => <Pressable key={row.restaurant.id} accessibilityRole="button"
+    {filtered.length ? filtered.map(row => <Pressable key={row.restaurant.id} accessibilityRole="button"
       accessibilityLabel={`${row.restaurant.name}, ${row.crowd ? crowdLabels[row.crowd.level] : '혼잡도 확인 실패'}`}
       onPress={() => setSelectedId(row.restaurant.id)}
       style={[styles.restaurant, reportId === row.restaurant.id && styles.selectedRestaurant]}>
@@ -212,14 +207,8 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       <Text style={[t.small, styles.muted]}>{row.restaurant.address}</Text>
       {row.crowd ? <CrowdBadge level={row.crowd.level} /> : <Text style={t.small}>혼잡도를 불러오지 못했어요.</Text>}
       {activeBenefits(row.promotions).length > 0 && <Text style={t.small}>진행 중인 할인 혜택 {activeBenefits(row.promotions).length}개</Text>}
-      {(row.deviceCouponCount ?? 0) > 0 && <Text style={t.small}>다운로드 가능한 쿠폰 {row.deviceCouponCount}개 · 기기 테스트</Text>}
+      {(row.deviceCouponCount ?? 0) > 0 && <Text style={t.small}>다운로드 가능한 쿠폰 {row.deviceCouponCount}개</Text>}
     </Pressable>) : empty}
-    {filtered.length > 0 && <View style={styles.moreArea}>
-      <Text style={[t.small, styles.muted]}>{Math.min(visibleCount, filtered.length)} / {filtered.length}개 식당</Text>
-      {visibleCount < filtered.length && <CustomerButton onPress={() => setVisibleCount(count => count + RESTAURANT_PAGE_SIZE)}>
-        식당 {Math.min(RESTAURANT_PAGE_SIZE, filtered.length - visibleCount)}개 더 보기
-      </CustomerButton>}
-    </View>}
   </>;
   const stayPanel = <StayObservationPanel restaurants={rows.map(row => row.restaurant)} onSelect={candidate => {
     const restaurant = rows.find(row => String(row.restaurant.id) === candidate.id)?.restaurant;
@@ -232,17 +221,11 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const homeList = tab === 'home' && !selected;
 
   return <View style={styles.root}><KeyboardAvoidingView style={styles.shell} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    {homeList ? <CustomerRestaurantSheet refreshing={loading || coupons.loading} onRefresh={() => { void refresh(); void coupons.refresh(); }} resetKey={`${query}|${sort}`}
+    {homeList ? <CustomerRestaurantSheet refreshing={loading || coupons.loading} onRefresh={() => { void refresh(); void coupons.refresh(); }} resetKey={query}
       header={<><View style={styles.header}><HeaderLogo /></View>
         <View style={styles.searchWrap}><CustomerSearch value={query} onChange={setQuery} onSubmit={() => { void searchNaver(); }} />
           <Text style={[t.small, styles.searchHint]}>검색하면 앱 안에서 네이버 결과를 볼 수 있어요</Text></View></>}
-      title={<><Pressable accessibilityRole="button" accessibilityLabel="식당 정렬 선택" onPress={() => setSortOpen(!sortOpen)} style={styles.panelTitle}>
-        <Text style={t.heading}>식당 둘러보기</Text><Text style={t.small}>{sort} ▾</Text></Pressable>
-        {sortOpen && <View style={styles.sortOptions}>{(['거리순', '여유순', '프로모션'] as RestaurantSort[]).map(value =>
-          <Pressable key={value} accessibilityRole="button" onPress={() => { setSort(value); setSortOpen(false); }} style={styles.sortOption}>
-            <Text style={[t.body, sort === value && styles.selectedText]}>{value}</Text>
-          </Pressable>)}</View>}</>}>
-      <Text style={[t.small, styles.listNote]}>{sort === '거리순' ? '거리가 확인된 식당부터 보여드려요. 아직 거리 정보가 없는 식당은 아래에 표시돼요.' : sort === '여유순' ? '최근 제보를 기준으로 여유 있는 식당부터 보여드려요.' : '현재 할인 혜택이나 발행된 쿠폰이 있는 식당을 보여드려요.'}</Text>
+      title={<View style={styles.panelTitle}><Text style={t.heading}>식당 둘러보기</Text></View>}>
       {error ? <View style={styles.message}><Text style={t.body}>{error}</Text><CustomerButton onPress={() => { void refresh(); }}>다시 시도</CustomerButton></View>
         : loading && !rows.length ? <ActivityIndicator color={c.black} /> : list}
     </CustomerRestaurantSheet> : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}
@@ -261,7 +244,6 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           {selected.promotions === null ? <Text style={t.small}>할인 혜택을 불러오지 못했어요. 화면을 아래로 당겨 다시 확인해 주세요.</Text> : selectedBenefits.map(promotion => <View key={promotion.id} style={styles.promotion}>
             <Text style={t.body}>{promotion.title}</Text><Text style={t.small}>{promotion.description}</Text>
             <Text style={t.small}>{promotion.discountPercent}% 할인 · {dateLabel(promotion.endAt)}까지</Text>
-            <Text style={[t.small, styles.muted]}>서버에 등록된 할인 안내</Text>
           </View>)}
           {!!coupons.error && <Text accessibilityRole="alert" style={t.small}>{coupons.error}</Text>}
           {user && <DownloadableCoupons key={`${user.id}:${user.email}:${selected.restaurant.id}`} user={user} wallet={coupons.wallet} now={coupons.now}
@@ -269,7 +251,6 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           <View style={[styles.panel, styles.statusPanel]}><Text style={t.heading}>현재 혼잡도</Text>
             {selected.crowd ? <><CrowdBadge level={selected.crowd.level} /><Text style={t.small}>제보 {selected.crowd.reportCount}건</Text>
               <Text style={t.small}>{selected.crowd.updatedAt ? `마지막 제보 ${dateLabel(selected.crowd.updatedAt)}` : '아직 제보가 없어요.'}</Text></> : <Text style={t.body}>혼잡도를 불러오지 못했어요.</Text>}
-            <Text style={[t.small, styles.muted]}>개별 제보자 목록은 아직 제공되지 않아요.</Text>
           </View>
           <CustomerButton onPress={() => beginReport(selected.restaurant)}>이 식당 제보하기</CustomerButton>
           <Pressable accessibilityRole="button" onPress={() => setShowChart(true)}><Text style={[t.small, styles.link]}>이전 제보는 통계표를 확인하세요</Text></Pressable>
@@ -285,7 +266,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           <View style={styles.reportCard}><Text style={[t.heading, styles.centerText]}>혼잡도를 제보해 주세요!</Text>
             <View style={styles.levelChoices}>
             {levels.map(value => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: level === value, disabled: submitting }}
-              disabled={submitting} onPress={() => setLevel(value)} style={[styles.levelOption, level === value && styles.selectedRestaurant]}>
+              disabled={submitting} onPress={() => setLevel(value)} style={({ pressed }) => [styles.levelOption, level === value && styles.selectedRestaurant]}>
               <View style={[styles.levelDot, { backgroundColor: value === 'AVAILABLE' ? c.available : value === 'FEW_SEATS' ? c.fewSeats : c.longWait }]} />
               <Text style={[t.small, styles.centerText]}>{crowdLabels[value]}</Text>
               <Text style={styles.choiceState}>{level === value ? '선택됨' : '선택'}</Text>
@@ -306,7 +287,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
         </> : <>
           {user && <CustomerProfile user={user} />}
           <CustomerPointBalance wallet={coupons.wallet} error={coupons.error} loading={coupons.loading} onRefresh={() => { void coupons.refresh(); }} />
-          <View style={styles.historyActionRow}><Pressable accessibilityRole="button" onPress={() => setShowHistory(true)} style={styles.historyAction}><Text style={t.small}>내 제보 보기</Text></Pressable></View>
+          <View style={styles.historyActionRow}><Pressable accessibilityRole="button" onPress={() => setShowHistory(true)} style={({ pressed }) => [styles.historyAction, pressed && styles.selectedRestaurant]}><Text style={t.small}>내 제보 보기</Text></Pressable></View>
           {user && <CustomerCouponWallet key={`${user.id}:${user.email}`} user={user} wallet={coupons.wallet} now={coupons.now}
             disabled={coupons.loading || !!coupons.error} onChanged={coupons.refresh} />}
         </>}
@@ -324,28 +305,24 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 }, content: { flexGrow: 1 },
   header: { paddingTop: m.headerTop, paddingHorizontal: m.gutter, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logout: { minHeight: px(48), paddingLeft: px(16), justifyContent: 'center' },
-  searchWrap: { alignItems: 'center', marginTop: m.headerGap, paddingHorizontal: m.gutter },
+  searchWrap: { alignItems: 'flex-start', marginTop: m.headerGap, paddingHorizontal: m.gutter },
   section: { paddingHorizontal: m.gutter, gap: m.sectionGap, paddingTop: m.sectionGap, paddingBottom: m.sectionGap },
   panel: { backgroundColor: c.panel, borderRadius: m.panelRadius, overflow: 'hidden' },
   panelTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: m.gutter, paddingVertical: px(12), gap: px(8) },
   searchHint: { color: c.muted, marginTop: px(8) },
-  moreArea: { padding: m.gutter, gap: px(12) },
-  listNote: { color: c.muted, paddingHorizontal: m.gutter, paddingBottom: px(12) },
   restaurant: { paddingHorizontal: m.gutter, paddingVertical: m.rowPadding, gap: px(4), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.divider },
   rowTitle: { flexDirection: 'row', alignItems: 'center', gap: px(8) }, flexText: { flex: 1 },
   promotion: { backgroundColor: c.guest, padding: m.rowPadding, borderRadius: px(10), gap: px(8) },
   message: { padding: m.gutter, gap: m.sectionGap }, muted: { color: c.muted },
-  sortOptions: { paddingHorizontal: m.gutter, backgroundColor: c.white }, sortOption: { paddingVertical: px(12) },
-  selectedText: { textDecorationLine: 'underline' },
   statusPanel: { padding: m.rowPadding, gap: px(12) },
-  reportCard: { backgroundColor: c.dialog, padding: px(20), borderRadius: px(20), gap: px(24), borderWidth: StyleSheet.hairlineWidth, borderColor: c.divider },
+  reportCard: { backgroundColor: c.dialog, padding: px(20), borderRadius: px(20), gap: px(24) },
   levelChoices: { flexDirection: 'row', gap: px(8) },
-  levelOption: { flex: 1, minHeight: px(126), alignItems: 'center', justifyContent: 'center', padding: px(8), gap: px(8), borderRadius: px(12), borderWidth: 1, borderColor: c.divider },
+  levelOption: { flex: 1, minHeight: px(126), backgroundColor: c.unselectedButton, alignItems: 'center', justifyContent: 'center', padding: px(8), gap: px(8), borderRadius: px(12) },
   levelDot: { width: px(24), height: px(24), borderRadius: px(12) },
   choiceState: { ...t.small, color: c.muted }, centerText: { textAlign: 'center' },
-  selectedRestaurant: { backgroundColor: c.neutralButton, borderColor: c.black },
+  selectedRestaurant: { backgroundColor: c.selectedButton, borderBottomWidth: 0 },
   historyActionRow: { alignItems: 'flex-end', marginTop: px(-12) },
-  historyAction: { minHeight: px(44), paddingHorizontal: px(16), justifyContent: 'center', borderWidth: 1, borderColor: c.divider, borderRadius: px(8) },
+  historyAction: { minHeight: px(44), paddingHorizontal: px(16), backgroundColor: c.brandYellow, justifyContent: 'center', borderRadius: px(8) },
   couponEmpty: { backgroundColor: c.guest, borderRadius: px(10), padding: m.rowPadding, gap: px(8) },
   link: { ...t.small, color: c.black, textDecorationLine: 'underline', paddingVertical: px(12) },
 });

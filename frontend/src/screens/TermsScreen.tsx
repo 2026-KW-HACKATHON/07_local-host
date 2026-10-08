@@ -52,7 +52,6 @@ export function TermsScreen({ onContinue, onBack }: { onContinue: () => void; on
         ))}
       </View>
       <FigmaButton
-        backgroundColor={colors.primary}
         onPress={submit}
         style={styles.startButton}
         textStyle={styles.startText}
@@ -96,10 +95,10 @@ const styles = StyleSheet.create({
     marginLeft: px(15),
   },
   startText: {
-    color: colors.white,
+    color: colors.black,
   },
   termRow: { flexDirection: 'row', alignItems: 'center', minHeight: px(44), gap: px(12) },
-  checkbox: { width: px(24), height: px(24), borderWidth: 1.5, borderColor: colors.muted, borderRadius: px(5), alignItems: 'center', justifyContent: 'center' },
-  checkboxChecked: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkmark: { color: colors.white, fontSize: px(17), lineHeight: px(22) },
+  checkbox: { width: px(24), height: px(24), backgroundColor: colors.unselectedButton, borderRadius: px(5), alignItems: 'center', justifyContent: 'center' },
+  checkboxChecked: { backgroundColor: colors.selectedButton, borderWidth: 0 },
+  checkmark: { color: colors.black, fontSize: px(17), lineHeight: px(22) },
 });

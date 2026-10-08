@@ -82,7 +82,6 @@ export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: Lo
         />
       </View>
       <FigmaButton
-        backgroundColor={colors.primary}
         loading={loading}
         onPress={() => void submit()}
         style={styles.loginButton}
@@ -94,7 +93,7 @@ export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: Lo
         <SocialButton onPress={() => showSocialSetup('Google')} provider="google" />
         <SocialButton onPress={() => showSocialSetup('네이버')} provider="naver" />
       </View>
-      <Pressable accessibilityRole="button" disabled={loading} onPress={onSignup} style={styles.signupLink}>
+      <Pressable accessibilityRole="button" disabled={loading} onPress={onSignup} style={({ pressed }) => [styles.signupLink, (loading || pressed) && styles.inactive]}>
         <Text style={styles.signupText}>계정이 없으신가요? 회원가입</Text>
       </Pressable>
     </DesignScreen>
@@ -104,7 +103,7 @@ export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: Lo
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(17),
-    marginLeft: px(-2),
+    marginLeft: px(15),
     alignSelf: 'flex-start',
   },
   title: {
@@ -120,13 +119,14 @@ const styles = StyleSheet.create({
     marginLeft: px(15),
   },
   loginButtonText: {
-    color: colors.white,
+    color: colors.black,
   },
   socials: {
     marginTop: px(32),
     marginLeft: px(15),
     gap: px(12),
   },
-  signupLink: { alignSelf: 'center', marginTop: px(29) },
+  signupLink: { alignSelf: 'center', marginTop: px(29), minHeight: px(44), paddingHorizontal: px(16), justifyContent: 'center', borderRadius: px(12), backgroundColor: colors.brandYellow },
+  inactive: { backgroundColor: colors.unselectedButton },
   signupText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
 });

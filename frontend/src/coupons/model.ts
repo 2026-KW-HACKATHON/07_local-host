@@ -32,7 +32,7 @@ const boundedText = (value: unknown, maximum: number): value is string => typeof
 const isoTime = (value: unknown): value is string => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
   Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
 const accountKeyValid = (value: unknown): value is string => typeof value === 'string' && /^[1-9]\d*\|[^|]{1,800}$/.test(value);
-const corruption = () => new Error('이 기기에 저장된 쿠폰·포인트 정보를 읽지 못했어요. 기존 정보는 변경하지 않았어요.');
+const corruption = () => new Error('쿠폰·포인트 정보를 읽지 못했어요. 기존 정보는 변경하지 않았어요.');
 
 export function deviceUserKey(user: User): string {
   if (!positiveId(user.id) || !boundedText(user.email, 254) || !['OWNER', 'CUSTOMER'].includes(user.role)) throw new Error('로그인 정보를 확인해 주세요.');

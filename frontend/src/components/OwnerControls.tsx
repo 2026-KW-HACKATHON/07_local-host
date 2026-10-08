@@ -11,16 +11,17 @@ export function OwnerNavigation({ tab, onSelect, disabled }: { tab: OwnerTab; on
   ] as const).map(([value, label, icon]) => <Pressable key={value} accessibilityRole="tab" accessibilityLabel={label}
     accessibilityState={{ selected: tab === value, disabled }} disabled={disabled} testID={`owner-tab-${value}`}
     onPress={() => onSelect(value)} style={styles.tab}>
-    <AppIcon name={icon} size={30} color={tab === value ? c.black : c.white} />
-    <Text style={[t.small, { color: tab === value ? c.black : c.white }]}>{label}</Text>
+    <AppIcon name={icon} size={30} color={tab === value ? c.black : c.muted} />
+    <Text style={[t.small, { color: tab === value ? c.black : c.muted }]}>{label}</Text>
   </Pressable>)}</View>;
 }
-export function OwnerButton({ children, onPress, disabled = false, secondary = false }: PropsWithChildren<{
-  onPress: () => void; disabled?: boolean; secondary?: boolean;
+export function OwnerButton({ children, onPress, disabled = false, selected }: PropsWithChildren<{
+  onPress: () => void; disabled?: boolean; secondary?: boolean; selected?: boolean;
 }>) {
-  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress}
-    style={({ pressed }) => [styles.button, secondary && styles.secondary, (disabled || pressed) && styles.dim]}>
-    <Text style={[t.body, { color: secondary ? c.black : c.white, textAlign: 'center' }]}>{children}</Text>
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled, selected }} disabled={disabled} onPress={onPress}
+    style={({ pressed }) => [styles.button, (disabled || pressed) && styles.inactive,
+      selected !== undefined && { backgroundColor: selected ? c.selectedButton : c.unselectedButton }]}>
+    <Text style={[t.body, { color: c.black, textAlign: 'center' }]}>{children}</Text>
   </Pressable>;
 }
 export function OwnerField({ label, ...props }: TextInputProps & { label: string }) {
@@ -29,7 +30,7 @@ export function OwnerField({ label, ...props }: TextInputProps & { label: string
 }
 export function OwnerInfoRow({ label, value, onPress, action = '수정' }: { label: string; value: string; onPress: () => void; action?: string }) {
   return <View style={styles.info}><Text style={t.heading}>{label}</Text><View style={styles.infoRow}>
-    <Text style={[t.body, styles.value]}>{value}</Text><Pressable accessibilityRole="button" accessibilityLabel={`${label} ${action}`} onPress={onPress} style={styles.edit}>
+    <Text style={[t.body, styles.value]}>{value}</Text><Pressable accessibilityRole="button" accessibilityLabel={`${label} ${action}`} onPress={onPress} style={({ pressed }) => [styles.edit, pressed && styles.inactive]}>
       <Text style={t.body}>{action}</Text></Pressable></View></View>;
 }
 export function OwnerNotice({ children }: PropsWithChildren) { return <Text style={[t.small, styles.note]}>{children}</Text>; }
@@ -39,11 +40,11 @@ export function OwnerBack({ onPress, disabled }: { onPress: () => void; disabled
 const styles = StyleSheet.create({
   nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.neutralButton },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(5) },
-  button: { minHeight: s.control, padding: px(12), backgroundColor: c.primary, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
-  secondary: { backgroundColor: c.row }, dim: { opacity: 0.45 },
+  button: { minHeight: s.control, padding: px(12), backgroundColor: c.brandYellow, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
+  inactive: { backgroundColor: c.unselectedButton },
   fieldGroup: { gap: px(8) }, input: { ...t.body, minHeight: s.control, paddingHorizontal: px(18), paddingVertical: px(12), borderRadius: s.radius, backgroundColor: c.field, color: c.black },
   multiline: { minHeight: px(100), textAlignVertical: 'top' },
   info: { gap: px(6) }, infoRow: { flexDirection: 'row', alignItems: 'center', gap: px(12), minHeight: s.control, padding: px(12), borderRadius: s.radius, backgroundColor: c.row },
-  value: { flex: 1, color: c.muted }, edit: { minHeight: px(44), minWidth: px(50), paddingHorizontal: px(7), borderWidth: 1, borderColor: c.border, borderRadius: px(8), backgroundColor: c.edit, justifyContent: 'center', alignItems: 'center' },
+  value: { flex: 1, color: c.muted }, edit: { minHeight: px(44), minWidth: px(50), paddingHorizontal: px(7), borderRadius: px(8), backgroundColor: c.edit, justifyContent: 'center', alignItems: 'center' },
   note: { color: c.muted }, back: { minHeight: px(44), justifyContent: 'center', alignSelf: 'flex-start' },
 });

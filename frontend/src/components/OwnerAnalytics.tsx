@@ -20,14 +20,12 @@ export interface OwnerAnalyticsProps {
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
-  /** A short source disclosure when the observations cover only a subset of all reports. */
-  dataScope?: string;
   emptyMessage?: string;
 }
 
 /** The existing seven-day API cannot supply this view's four-week dataset. */
 export function OwnerAnalytics({ restaurantId, points, tieBreak = 'latest', windowEnd,
-  loading = false, error = null, onRetry, dataScope, emptyMessage = '최근 4주 데이터가 없어요.' }: OwnerAnalyticsProps) {
+  loading = false, error = null, onRetry, emptyMessage = '최근 4주 데이터가 없어요.' }: OwnerAnalyticsProps) {
   const [day, setDay] = useState(1);
   const week = useMemo(() => aggregateOwnerCrowd(points ?? noPoints, { endAt: windowEnd, tieBreak }),
     [points, tieBreak, windowEnd, restaurantId]);
@@ -36,11 +34,6 @@ export function OwnerAnalytics({ restaurantId, points, tieBreak = 'latest', wind
 
   return <View style={styles.content}>
     <Text style={t.title}>데이터</Text>
-    <View style={styles.periodRow}>
-      <Pressable accessibilityRole="button" accessibilityLabel="최근 4주" accessibilityState={{ selected: true }}
-        onPress={() => setDay(1)} style={styles.period}><Text style={t.body}>최근 4주</Text></Pressable>
-    </View>
-    {dataScope && <Text style={[t.small, styles.scope]}>{dataScope}</Text>}
     <View accessibilityRole="tablist" style={styles.days}>{days.map(value => <Pressable key={value}
       accessibilityRole="tab" accessibilityLabel={`${weekdays[value]}요일`} accessibilityState={{ selected: day === value }}
       onPress={() => setDay(value)} style={[styles.day, day === value && styles.selectedDay]}>
@@ -85,13 +78,10 @@ function HourColumn({ bucket, day }: { bucket: HourlyCrowdBucket; day: number })
 
 const styles = StyleSheet.create({
   content: { gap: px(20) },
-  periodRow: { flexDirection: 'row' },
-  scope: { color: c.muted },
-  period: { paddingHorizontal: px(18), minHeight: px(44), justifyContent: 'center', borderRadius: px(12), backgroundColor: c.edit, borderWidth: 1, borderColor: c.black },
   days: { flexDirection: 'row', gap: px(4) },
-  day: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(12), backgroundColor: c.row },
-  selectedDay: { backgroundColor: c.black },
-  selectedDayText: { color: c.white },
+  day: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(12), backgroundColor: c.unselectedButton },
+  selectedDay: { backgroundColor: c.selectedButton },
+  selectedDayText: { color: c.black },
   chartRow: { flexDirection: 'row', gap: px(10) },
   axis: { height: px(190), paddingBottom: px(1), justifyContent: 'space-between' },
   plot: { paddingRight: px(10) },

@@ -19,7 +19,7 @@ export function WelcomeScreen({
       <FigmaButton onPress={onLogin} style={styles.loginButton} textStyle={styles.loginText}>
         로그인
       </FigmaButton>
-      <Pressable accessibilityRole="button" onPress={onSignup} style={styles.signupButton}>
+      <Pressable accessibilityRole="button" onPress={onSignup} style={({ pressed }) => [styles.signupButton, pressed && styles.inactive]}>
         <Text allowFontScaling={false} style={styles.signupText}>
           회원가입
         </Text>
@@ -31,7 +31,7 @@ export function WelcomeScreen({
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(19),
-    marginLeft: px(-2),
+    marginLeft: px(15),
     alignSelf: 'flex-start',
   },
   title: {
@@ -46,10 +46,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.koreanBold,
   },
   signupButton: {
-    height: px(29),
+    minHeight: px(44),
     marginTop: px(45),
     alignSelf: 'center',
     justifyContent: 'center',
+    paddingHorizontal: px(20),
+    borderRadius: px(12),
+    backgroundColor: colors.brandYellow,
   },
   signupText: {
     color: colors.black,
@@ -59,4 +62,5 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     letterSpacing: 0,
   },
+  inactive: { backgroundColor: colors.unselectedButton },
 });

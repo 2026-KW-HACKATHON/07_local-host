@@ -15,6 +15,7 @@ const issued = () => ({ id: 'promotion-1', ownerKey: '2|owner%40example.test', r
   schedule: schedule(), pointsCost: 1000, publishedAt: '2026-10-08T00:00:00.000Z', cancelledAt: null });
 const defaults = () => ({ ...empty(), perks: ['음료', '사리', '치즈볼'] });
 const nodes = tree => !tree || typeof tree !== 'object' ? [] : [tree, ...[tree.props?.children].flat(Infinity).flatMap(nodes)];
+const text = tree => nodes(tree).filter(node => node.type === 'Text').map(node => String(node.props?.children ?? '')).join(' ');
 const deferred = () => { let resolve, reject; const promise = new Promise((ok, fail) => { resolve = ok; reject = fail; }); return { promise, resolve, reject }; };
 async function settle() { for (let i = 0; i < 20; i++) await Promise.resolve(); }
 
@@ -23,8 +24,8 @@ async function settle() { for (let i = 0; i < 20; i++) await Promise.resolve(); 
  * native lifecycle remain emulator coverage. Refresh is explicitly triggered
  * to deterministically test old-response races and mutation error handling.
  */
-function fixture({ tab = 'report', page = 'main', draft = defaults(), selected = shop, level = null, description = '', couponPromotions = [], couponError = '', api = {} } = {}) {
-  const states = [tab, page, selected ? [selected] : [], selected?.id ?? null, [], draft, [], '', level, description, null, false, false, '', 1];
+function fixture({ tab = 'report', page = 'main', draft = defaults(), selected = shop, level = null, description = '', couponPromotions = [], couponError = '', managedPromotions = [], api = {} } = {}) {
+  const states = [tab, page, selected ? [selected] : [], selected?.id ?? null, [], draft, managedPromotions, '', level, description, null, false, false, '', 1];
   const refs = [];
   let stateIndex = 0, refIndex = 0;
   const calls = { create: 0, report: 0, writeDraft: 0, publish: [], cancel: [], couponRefresh: 0 };
@@ -64,6 +65,7 @@ function fixture({ tab = 'report', page = 'main', draft = defaults(), selected =
     };
     if (id.endsWith('AuthContext')) return { useAuth: () => ({ user: { id: 2, nickname: '점주', email: 'owner@example.test', role: 'OWNER' }, token: 'fixture-only', logout: async () => {} }) };
     if (id.endsWith('/restaurants') || id.endsWith('/crowd') || id.endsWith('/promotions')) return dependencies;
+    if (id.endsWith('/customer/restaurantList')) return { isTemporaryPromotion: () => false };
     if (id.endsWith('/errorMessage')) return { getApiErrorMessage: error => error.message };
     if (id.endsWith('/drafts')) return { ...dependencies, emptyOwnerDraft: empty };
     if (id.endsWith('/reports')) return dependencies;
@@ -97,7 +99,7 @@ function fixture({ tab = 'report', page = 'main', draft = defaults(), selected =
   render();
   const find = predicate => nodes(tree).find(predicate);
   return {
-    states, calls, coupons, render, find,
+    states, calls, coupons, render, find, text: () => text(tree),
     child: type => find(node => node.type === type)?.props,
     button(label) { const result = find(node => node.type === 'OwnerButton' && node.props.children === label); assert.ok(result, `Missing action: ${label}`); return result.props; },
     buttons: label => nodes(tree).filter(node => node.type === 'OwnerButton' && node.props.children === label).map(node => node.props),
@@ -116,6 +118,14 @@ test('owner stage action opens options for that stage without immediately publis
   assert.equal(form.child('PromotionOptionsForm').expiryDescription.includes('3일'), true);
 });
 
+test('temporary lunch promotion is hidden and empty state is shown', () => {
+  const form = fixture({ managedPromotions: [{ id: 99, restaurantId: 5, title: '점심 10%할인', description: '임시 데이터', discountPercent: 10,
+    startAt: '2026-01-01T00:00:00Z', endAt: '2090-01-01T00:00:00Z', enabled: true, active: true }] });
+  const rendered = form.text();
+  assert.doesNotMatch(rendered, /점심 10%할인/);
+  assert.match(rendered, /진행 중인 프로모션이 없어요\./);
+});
+
 test('owner publication failure does not show a false published promotion', async () => {
   const form = fixture({ tab: 'promotion', api: { publishDevicePromotion: async () => { throw new Error('storage failed'); } } });
   form.button('발행하기').onPress(); form.render();
@@ -130,6 +140,7 @@ test('owner publication failure does not show a false published promotion', asyn
 
 test('publication success shows stored stage and passes selected schedule and 500-step cost', async () => {
   const form = fixture({ tab: 'promotion' });
+  assert.ok(form.buttons('발행하기').every(button => button.selected === false));
   form.buttons('발행하기')[2].onPress(); form.render();
   const options = schedule();
   form.child('PromotionOptionsForm').onSave(options, 3500); await settle(); form.render();
@@ -141,6 +152,8 @@ test('publication success shows stored stage and passes selected schedule and 50
   assert.deepEqual(plain(form.calls.publish[0][4]), options);
   assert.equal(form.coupons.promotions[0].stage, 3);
   assert.equal(form.buttons('발행 취소').length, 1);
+  assert.equal(form.button('발행 취소').selected, true);
+  assert.ok(form.buttons('발행하기').every(button => button.selected === false));
   assert.equal(form.calls.writeDraft, 0);
 });
 

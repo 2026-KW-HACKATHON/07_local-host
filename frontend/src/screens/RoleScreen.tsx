@@ -4,7 +4,7 @@ import { Alert, StyleSheet, View } from 'react-native';
 import { HeaderLogo } from '../components/BrandAssets';
 import { DesignScreen } from '../components/DesignScreen';
 import { FigmaButton } from '../components/Controls';
-import { colors, fonts, px } from '../theme/tokens';
+import { fonts, px } from '../theme/tokens';
 
 export type UserRole = 'CUSTOMER' | 'OWNER';
 
@@ -50,7 +50,6 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect, onBack }: R
       <HeaderLogo style={styles.logo} />
       <View style={styles.actions}>
         <FigmaButton
-          backgroundColor={colors.guest}
           disabled={busy}
           loading={loadingRole === 'CUSTOMER'}
           onPress={() => void selectRole('CUSTOMER')}
@@ -60,7 +59,6 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect, onBack }: R
           {creatingAccount ? '손님으로 가입' : '손님 버전'}
         </FigmaButton>
         <FigmaButton
-          backgroundColor={colors.owner}
           disabled={busy || Boolean(allowedRole && allowedRole !== 'OWNER')}
           loading={loadingRole === 'OWNER'}
           onPress={() => void selectRole('OWNER')}
@@ -77,7 +75,7 @@ export function RoleScreen({ allowedRole, creatingAccount, onSelect, onBack }: R
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(18),
-    marginLeft: px(-2),
+    marginLeft: px(15),
     alignSelf: 'flex-start',
   },
   actions: {

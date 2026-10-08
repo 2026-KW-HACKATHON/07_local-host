@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Animated, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { customerColors as c, customerMetrics as m, customerType as t } from '../theme/customerTokens';
+import { Animated, PanResponder, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { customerColors as c, customerMetrics as m } from '../theme/customerTokens';
 import { px } from '../theme/tokens';
 
 /** The header collapses in normal Flex layout; the list owns its scroll gesture. */
@@ -47,7 +47,7 @@ export function CustomerRestaurantSheet({ header, children, title, refreshing, o
         <Pressable accessibilityRole="button" accessibilityLabel={expanded ? '식당 목록 접기' : '식당 목록 펼치기'}
           accessibilityHint="위아래로 끌거나 두 번 눌러 목록 크기를 바꿉니다"
           accessibilityState={{ expanded }} onPress={() => snap(!expanded)} style={styles.handleArea}>
-          <View style={styles.handle} /><Text style={[t.small, styles.hint]}>{expanded ? '아래로 내려 접기' : '위로 올려 더 보기'}</Text>
+          <View style={styles.handle} />
         </Pressable>
       </View>
       {title}
@@ -64,5 +64,5 @@ const styles = StyleSheet.create({
   sheet: { flex: 1, backgroundColor: c.panel, borderTopLeftRadius: m.panelRadius, borderTopRightRadius: m.panelRadius, overflow: 'hidden' },
   handleArea: { minHeight: px(48), justifyContent: 'center', alignItems: 'center', gap: px(4), paddingTop: px(8) },
   handle: { width: px(42), height: px(4), borderRadius: px(2), backgroundColor: c.divider },
-  hint: { color: c.muted }, list: { flex: 1 }, listContent: { paddingBottom: m.sectionGap },
+  list: { flex: 1 }, listContent: { paddingBottom: m.sectionGap },
 });

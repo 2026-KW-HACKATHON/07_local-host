@@ -7,7 +7,8 @@ const result = { exports: {} };
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(`${__dirname}/restaurantList.ts`, 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS },
 }).outputText, { exports: result.exports, Date });
-const { selectRestaurants, activeBenefits, naverSearchUrls, distanceLabel, RESTAURANT_PAGE_SIZE } = result.exports;
+const { selectRestaurants, activeBenefits, isTemporaryPromotion, naverSearchUrls, restaurantMapQuery, distanceLabel } = result.exports;
+const customerScreenSource = fs.readFileSync(`${__dirname}/../screens/CustomerScreen.tsx`, 'utf8');
 const promo = { id: 1, enabled: true, active: true, startAt: '2020-01-01T00:00:00Z', endAt: '2090-01-01T00:00:00Z' };
 const rows = [
   { restaurant: { id: 1, name: '밥집', address: '노원' }, crowd: { level: 'LONG_WAIT' }, promotions: [promo] },
@@ -34,21 +35,28 @@ test('query matches restaurant names and addresses without case sensitivity', ()
   assert.deepEqual(ids(selectRestaurants(rows, '노원', '거리순', {})), [1, 3]);
   assert.deepEqual(ids(selectRestaurants(rows, ' PIZZA ', '거리순', {})), [4]);
 });
-test('three rows initially then 6 then final 7', () => {
-  assert.equal(RESTAURANT_PAGE_SIZE, 3);
-  assert.equal(rows.slice(0, RESTAURANT_PAGE_SIZE).length, 3);
-  assert.equal(rows.slice(0, RESTAURANT_PAGE_SIZE * 2).length, 6);
-  assert.equal(rows.slice(0, RESTAURANT_PAGE_SIZE * 3).length, 7);
-});
 test('Naver query remains encoded inside HTTPS mobile search, blank does not navigate', () => {
   assert.equal(naverSearchUrls('  '), null);
   assert.equal(naverSearchUrls('밥 & 면').web, 'https://m.map.naver.com/search2/search.naver?query=%EB%B0%A5%20%26%20%EB%A9%B4');
+});
+test('map search uses only the restaurant address, not its name', () => {
+  assert.equal(restaurantMapQuery({ name: '국밥집', address: ' 서울특별시 노원구 광운로 20 ' }), '서울특별시 노원구 광운로 20');
+});
+test('customer list renders every filtered restaurant without sort or pagination controls', () => {
+  assert.match(customerScreenSource, /filtered\.map\(/);
+  assert.doesNotMatch(customerScreenSource, /visibleCount|개 더 보기|식당 정렬 선택|sortOpen/);
 });
 test('only active, enabled, unexpired benefits are shown, never coupon ownership', () => {
   const expired = { ...promo, endAt: '2021-01-01T00:00:00Z' };
   assert.equal(activeBenefits([promo, expired, { ...promo, active: false }, { ...promo, enabled: false }]).length, 1);
   assert.equal(activeBenefits(null).length, 0);
   assert.deepEqual(ids(selectRestaurants(rows, '', '프로모션', {})), [1]);
+});
+
+test('temporary lunch promotion is hidden from customer and owner promotion lists', () => {
+  const temporary = { ...promo, title: '점심 10%할인' };
+  assert.equal(isTemporaryPromotion(temporary), true);
+  assert.equal(activeBenefits([temporary]).length, 0);
 });
 
 test('promotion filter also shows restaurants with downloadable device coupons', () => {
