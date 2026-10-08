@@ -102,6 +102,22 @@ test('photo is copied to durable app storage and survives picker cache removal',
   assert.equal((await app.readCustomerProfile(user)).photoUri, saved.photoUri);
 });
 
+test('file-provider image saves from its cache copy without touching the original document', async () => {
+  const app = fixture();
+  const original = 'content://documents/downloads/original-profile.png';
+  const cached = 'file:///app/cache/DocumentPicker/selected-profile.png';
+  app.files.set(original, { size: 2048 });
+  app.files.set(cached, { size: 2048 });
+  const saved = await app.saveCustomerProfile(user, { nickname: '파일손님', photoUri: cached });
+  assert.notEqual(saved.photoUri, cached);
+  assert.equal(app.files.has(original), true);
+  assert.equal(app.files.has(cached), true);
+  app.files.delete(cached);
+  assert.equal((await app.readCustomerProfile(user)).photoUri, saved.photoUri);
+  await app.saveCustomerProfile(user, { nickname: '파일손님', photoUri: null });
+  assert.equal(app.files.has(original), true);
+});
+
 test('replacing and removing a photo never removes the source image', async () => {
   const app = fixture();
   const firstSource = 'file:///cache/first.png';

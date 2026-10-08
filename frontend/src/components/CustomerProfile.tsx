@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressa
 import * as ImagePicker from 'expo-image-picker';
 import type { User } from '../api/types';
 import { readCustomerProfile, saveCustomerProfile } from '../profile/localProfile';
+import { pickProfilePhotoFile } from '../profile/photoFiles';
 import { PROFILE_PHOTO_MAX_BYTES, validateProfileNickname } from '../profile/profileModel';
 import type { CustomerProfilePreference } from '../profile/profileModel';
 import { customerColors as c, customerMetrics as m, customerType as t } from '../theme/customerTokens';
@@ -28,10 +29,15 @@ function ProfileEditor({ user, initial, pickImmediately, onClose, onSaved }: {
   const active = useRef(true);
   const pickedInitially = useRef(false);
   useEffect(() => { active.current = true; return () => { active.current = false; }; }, []);
-  const pickPhoto = async () => {
+  const pickPhoto = async (source: 'album' | 'file' = 'album') => {
     if (operation.current) return;
     operation.current = true; setBusy(true); setError('');
     try {
+      if (source === 'file') {
+        const uri = await pickProfilePhotoFile();
+        if (active.current && uri !== null) setPhotoUri(uri);
+        return;
+      }
       // The system photo picker grants access only to the selected image. No
       // blanket media-library, camera, microphone or location permission needed.
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -43,7 +49,7 @@ function ProfileEditor({ user, initial, pickImmediately, onClose, onSaved }: {
       if (photo.fileSize && photo.fileSize > PROFILE_PHOTO_MAX_BYTES) throw new Error('사진은 10MB 이하로 선택해 주세요.');
       setPhotoUri(photo.uri);
     } catch (failure) {
-      if (active.current) setError(failure instanceof Error && /10MB/.test(failure.message)
+      if (active.current) setError(failure instanceof Error && (source === 'file' || /10MB/.test(failure.message))
         ? failure.message : '사진을 불러오지 못했어요. 앱 업데이트와 사진 접근 설정을 확인해 주세요.');
     } finally { operation.current = false; if (active.current) setBusy(false); }
   };
@@ -70,7 +76,10 @@ function ProfileEditor({ user, initial, pickImmediately, onClose, onSaved }: {
       <ScrollView contentContainerStyle={styles.editorContent} keyboardShouldPersistTaps="handled">
         <View style={styles.photoControls}>
           <Pressable accessibilityRole="button" accessibilityLabel="프로필 사진 선택" disabled={busy} onPress={() => void pickPhoto()}><ProfilePhoto uri={photoUri} /></Pressable>
-          <Pressable accessibilityRole="button" disabled={busy} onPress={() => void pickPhoto()} style={styles.textButton}><Text style={[t.body, styles.link]}>사진 선택</Text></Pressable>
+          <View style={styles.photoSources}>
+            <Pressable accessibilityRole="button" accessibilityLabel="앨범에서 프로필 사진 선택" disabled={busy} onPress={() => void pickPhoto('album')} style={styles.textButton}><Text style={[t.body, styles.link]}>앨범에서 선택</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="파일에서 프로필 사진 선택" testID="customer-profile-pick-file" disabled={busy} onPress={() => void pickPhoto('file')} style={styles.textButton}><Text style={[t.body, styles.link]}>파일에서 선택</Text></Pressable>
+          </View>
           {photoUri && <Pressable accessibilityRole="button" disabled={busy} onPress={() => setPhotoUri(null)} style={styles.textButton}><Text style={[t.small, styles.muted]}>기본 사진으로 변경</Text></Pressable>}
         </View>
         <View style={styles.fieldGroup}>
@@ -134,6 +143,7 @@ const styles = StyleSheet.create({
   editorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: m.gutter, paddingTop: px(24), paddingBottom: px(12) },
   editorContent: { padding: m.gutter, paddingBottom: px(40), gap: px(22) },
   photoControls: { alignItems: 'center', gap: px(4) },
+  photoSources: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: px(8) },
   fieldGroup: { gap: px(8) },
   input: { ...t.body, color: c.black, backgroundColor: c.field, borderRadius: px(12), paddingHorizontal: px(16), paddingVertical: px(12), minHeight: px(56) },
   notice: { backgroundColor: c.panel, borderRadius: px(12), padding: px(14) },

@@ -14,6 +14,10 @@ import { CustomerProfile } from '../components/CustomerProfile';
 import { CustomerNaverSearch } from '../components/CustomerNaverSearch';
 import { StayObservationPanel } from '../components/StayObservationPanel';
 import { RestaurantBusinessHours } from '../components/RestaurantBusinessHours';
+import { CustomerCouponWallet, CustomerPointBalance, DownloadableCoupons } from '../components/CustomerCoupons';
+import { useDeviceCoupons } from '../coupons/useDeviceCoupons';
+import { awardDeviceReportPoints } from '../coupons/deviceStore';
+import { isPromotionDownloadable } from '../coupons/model';
 import { getEligibleStayRestaurants, getStayStatus, isStayReportLink } from '../location/stayService';
 import { useStayReportPrompt } from '../location/useStayReportPrompt';
 import { activeBenefits, distanceLabel, naverSearchUrls, RESTAURANT_PAGE_SIZE, selectRestaurants, type RestaurantSort, type RestaurantSummary } from '../customer/restaurantList';
@@ -31,6 +35,7 @@ function dateLabel(value: string) {
 
 export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const { user, token, logout } = useAuth();
+  const coupons = useDeviceCoupons(user);
   const [tab, setTab] = useState<CustomerTab>('home');
   const [dialog, setDialog] = useState<CustomerDialogState | null>(null);
   const [query, setQuery] = useState('');
@@ -126,14 +131,30 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
     return () => subscription.remove();
   }, [selectedId, showHistory, showChart, tab]);
 
-  const filtered = useMemo(() => selectRestaurants(rows, query, sort, distances), [rows, query, sort, distances]);
+  const couponRows = useMemo(() => rows.map(row => ({ ...row, deviceCouponCount: coupons.promotions.filter(p =>
+    p.restaurantId === row.restaurant.id && isPromotionDownloadable(p, coupons.now)).length })), [rows, coupons.promotions, coupons.now]);
+  const filtered = useMemo(() => selectRestaurants(couponRows, query, sort, distances), [couponRows, query, sort, distances]);
   useEffect(() => { setVisibleCount(RESTAURANT_PAGE_SIZE); }, [query, sort]);
   const selected = rows.find(row => row.restaurant.id === selectedId);
   const reportRestaurant = rows.find(row => row.restaurant.id === reportId)?.restaurant;
   const selectedBenefits = activeBenefits(selected?.promotions ?? null);
 
+  const creditReport = async (response: CrowdReportResponse) => {
+    if (!user) return;
+    try {
+      const result = await awardDeviceReportPoints(user, response);
+      await coupons.refresh();
+      setDialog({ title: '제보가 완료됐어요', message: result.awarded
+        ? `식당의 혼잡도를 알려주셔서 고마워요.\n+${result.awarded.toLocaleString('ko-KR')}P · 기기 테스트 적립\n현재 ${result.balance.toLocaleString('ko-KR')}P`
+        : `제보 포인트가 이미 반영됐어요.\n현재 ${result.balance.toLocaleString('ko-KR')}P · 기기 테스트`, confirm: '확인' });
+    } catch {
+      setDialog({ title: '제보는 저장됐어요', message: '포인트를 이 기기에 저장하지 못했어요. 제보를 다시 보내지 않고 적립만 다시 시도할 수 있어요.',
+        cancel: '닫기', confirm: '적립 다시 시도', onConfirm: () => { void creditReport(response); } });
+    }
+  };
+
   const submit = async () => {
-    if (!token || !reportRestaurant || !level || reportInFlight.current) return;
+    if (!token || !user || !reportRestaurant || !level || reportInFlight.current) return;
     if (!isConfirmedCandidate(reportRestaurant.id)) {
       Alert.alert('GPS 체류 확인이 필요해요', '체류 확인을 시작하고 5분 후 추천된 식당을 선택해 주세요. Expo Go에서는 제보 화면을 미리볼 수 있지만 GPS 확인과 제출은 APK가 필요해요.', [{ text: '확인' }]);
       return;
@@ -144,7 +165,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       const response = await reportCrowd(reportRestaurant.id, { level }, token);
       setHistory(previous => [{ ...response, restaurantName: reportRestaurant.name }, ...previous]);
       setLevel(null); setReportId(null);
-      setDialog({ title: '제보가 완료됐어요', message: '식당의 혼잡도를 알려주셔서 고마워요.\n포인트 적립 서비스는 준비 중이에요.', confirm: '확인' });
+      await creditReport(response);
       await refresh();
     } catch { Alert.alert('제보하지 못했어요', '로그인 상태와 서버 연결을 확인하고 다시 시도해 주세요.', [{ text: '확인' }]); }
     finally { reportInFlight.current = false; setSubmitting(false); }
@@ -191,6 +212,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       <Text style={[t.small, styles.muted]}>{row.restaurant.address}</Text>
       {row.crowd ? <CrowdBadge level={row.crowd.level} /> : <Text style={t.small}>혼잡도를 불러오지 못했어요.</Text>}
       {activeBenefits(row.promotions).length > 0 && <Text style={t.small}>진행 중인 할인 혜택 {activeBenefits(row.promotions).length}개</Text>}
+      {(row.deviceCouponCount ?? 0) > 0 && <Text style={t.small}>다운로드 가능한 쿠폰 {row.deviceCouponCount}개 · 기기 테스트</Text>}
     </Pressable>) : empty}
     {filtered.length > 0 && <View style={styles.moreArea}>
       <Text style={[t.small, styles.muted]}>{Math.min(visibleCount, filtered.length)} / {filtered.length}개 식당</Text>
@@ -210,7 +232,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const homeList = tab === 'home' && !selected;
 
   return <View style={styles.root}><KeyboardAvoidingView style={styles.shell} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    {homeList ? <CustomerRestaurantSheet refreshing={loading} onRefresh={() => { void refresh(); }} resetKey={`${query}|${sort}`}
+    {homeList ? <CustomerRestaurantSheet refreshing={loading || coupons.loading} onRefresh={() => { void refresh(); void coupons.refresh(); }} resetKey={`${query}|${sort}`}
       header={<><View style={styles.header}><HeaderLogo /></View>
         <View style={styles.searchWrap}><CustomerSearch value={query} onChange={setQuery} onSubmit={() => { void searchNaver(); }} />
           <Text style={[t.small, styles.searchHint]}>검색하면 앱 안에서 네이버 결과를 볼 수 있어요</Text></View></>}
@@ -220,11 +242,11 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           <Pressable key={value} accessibilityRole="button" onPress={() => { setSort(value); setSortOpen(false); }} style={styles.sortOption}>
             <Text style={[t.body, sort === value && styles.selectedText]}>{value}</Text>
           </Pressable>)}</View>}</>}>
-      <Text style={[t.small, styles.listNote]}>{sort === '거리순' ? '거리가 확인된 식당부터 보여드려요. 아직 거리 정보가 없는 식당은 아래에 표시돼요.' : sort === '여유순' ? '최근 제보를 기준으로 여유 있는 식당부터 보여드려요.' : '현재 할인 혜택이 있는 식당을 보여드려요.'}</Text>
+      <Text style={[t.small, styles.listNote]}>{sort === '거리순' ? '거리가 확인된 식당부터 보여드려요. 아직 거리 정보가 없는 식당은 아래에 표시돼요.' : sort === '여유순' ? '최근 제보를 기준으로 여유 있는 식당부터 보여드려요.' : '현재 할인 혜택이나 발행된 쿠폰이 있는 식당을 보여드려요.'}</Text>
       {error ? <View style={styles.message}><Text style={t.body}>{error}</Text><CustomerButton onPress={() => { void refresh(); }}>다시 시도</CustomerButton></View>
         : loading && !rows.length ? <ActivityIndicator color={c.black} /> : list}
     </CustomerRestaurantSheet> : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={loading} onRefresh={() => { void refresh(); }} />}>
+      refreshControl={<RefreshControl refreshing={loading || coupons.loading} onRefresh={() => { void refresh(); void coupons.refresh(); }} />}>
       <View style={styles.header}><HeaderLogo />{tab === 'my' && <Pressable accessibilityRole="button" onPress={logoutAction} style={styles.logout}><Text style={t.small}>로그아웃</Text></Pressable>}</View>
       {tab === 'home' && selected && <View style={styles.section}>
         <Pressable accessibilityRole="button" onPress={() => showChart ? setShowChart(false) : setSelectedId(null)}><Text style={t.body}>‹ {showChart ? '식당으로 돌아가기' : '식당 목록'}</Text></Pressable>
@@ -239,9 +261,11 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           {selected.promotions === null ? <Text style={t.small}>할인 혜택을 불러오지 못했어요. 화면을 아래로 당겨 다시 확인해 주세요.</Text> : selectedBenefits.map(promotion => <View key={promotion.id} style={styles.promotion}>
             <Text style={t.body}>{promotion.title}</Text><Text style={t.small}>{promotion.description}</Text>
             <Text style={t.small}>{promotion.discountPercent}% 할인 · {dateLabel(promotion.endAt)}까지</Text>
-            <Text style={[t.small, styles.muted]}>현재는 할인 안내만 제공해요. 쿠폰 발급·보유 기능은 아직 연결되지 않았어요.</Text>
-            <CustomerButton disabled onPress={() => undefined}>쿠폰 발급 준비 중</CustomerButton>
+            <Text style={[t.small, styles.muted]}>서버에 등록된 할인 안내</Text>
           </View>)}
+          {!!coupons.error && <Text accessibilityRole="alert" style={t.small}>{coupons.error}</Text>}
+          {user && <DownloadableCoupons key={`${user.id}:${user.email}:${selected.restaurant.id}`} user={user} wallet={coupons.wallet} now={coupons.now}
+            promotions={coupons.promotions.filter(p => p.restaurantId === selected.restaurant.id)} disabled={coupons.loading || !!coupons.error} onChanged={coupons.refresh} />}
           <View style={[styles.panel, styles.statusPanel]}><Text style={t.heading}>현재 혼잡도</Text>
             {selected.crowd ? <><CrowdBadge level={selected.crowd.level} /><Text style={t.small}>제보 {selected.crowd.reportCount}건</Text>
               <Text style={t.small}>{selected.crowd.updatedAt ? `마지막 제보 ${dateLabel(selected.crowd.updatedAt)}` : '아직 제보가 없어요.'}</Text></> : <Text style={t.body}>혼잡도를 불러오지 못했어요.</Text>}
@@ -281,9 +305,10 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
             <Text style={t.body}>{report.restaurantName}</Text><CrowdBadge level={report.level} /></View>) : <Text style={t.body}>아직 작성한 제보가 없어요.</Text>}
         </> : <>
           {user && <CustomerProfile user={user} />}
+          <CustomerPointBalance wallet={coupons.wallet} error={coupons.error} loading={coupons.loading} onRefresh={() => { void coupons.refresh(); }} />
           <View style={styles.historyActionRow}><Pressable accessibilityRole="button" onPress={() => setShowHistory(true)} style={styles.historyAction}><Text style={t.small}>내 제보 보기</Text></Pressable></View>
-          <Text style={t.heading}>받은 쿠폰</Text><View style={styles.couponEmpty}><Text style={t.body}>쿠폰 보관함 준비 중</Text>
-            <Text style={[t.small, styles.muted]}>쿠폰 발급과 보유 내역 조회가 아직 연결되지 않았어요. 식당에 올라온 할인 안내는 홈에서 확인할 수 있어요.</Text></View>
+          {user && <CustomerCouponWallet key={`${user.id}:${user.email}`} user={user} wallet={coupons.wallet} now={coupons.now}
+            disabled={coupons.loading || !!coupons.error} onChanged={coupons.refresh} />}
         </>}
       </View>}
     </ScrollView>}

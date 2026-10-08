@@ -1,6 +1,6 @@
 import type { CrowdStatusResponse, Promotion, Restaurant } from '../api/types';
 
-export type RestaurantSummary = { restaurant: Restaurant; crowd: CrowdStatusResponse | null; promotions: Promotion[] | null };
+export type RestaurantSummary = { restaurant: Restaurant; crowd: CrowdStatusResponse | null; promotions: Promotion[] | null; deviceCouponCount?: number };
 export type RestaurantSort = '거리순' | '여유순' | '프로모션';
 export const RESTAURANT_PAGE_SIZE = 3;
 const rank = { AVAILABLE: 0, FEW_SEATS: 1, LONG_WAIT: 2, UNKNOWN: 3 };
@@ -17,7 +17,7 @@ export function selectRestaurants(rows: RestaurantSummary[], query: string, sort
     return Number.isFinite(value) && value >= 0 ? value : Infinity;
   };
   return rows.filter(row => `${row.restaurant.name} ${row.restaurant.address}`.toLocaleLowerCase().includes(text)
-      && (sort !== '프로모션' || activeBenefits(row.promotions).length > 0))
+      && (sort !== '프로모션' || activeBenefits(row.promotions).length > 0 || (row.deviceCouponCount ?? 0) > 0))
     .sort((a, b) => {
       if (sort === '여유순') {
         const difference = rank[a.crowd?.level ?? 'UNKNOWN'] - rank[b.crowd?.level ?? 'UNKNOWN'];

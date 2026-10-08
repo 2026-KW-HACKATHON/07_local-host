@@ -12,6 +12,11 @@ import { CustomerDialog, type CustomerDialogState } from '../components/Customer
 import { OwnerBack, OwnerButton, OwnerField, OwnerInfoRow, OwnerNavigation, type OwnerTab } from '../components/OwnerControls';
 import { PerksForm, RestaurantForm, ScheduleForm } from '../components/OwnerForms';
 import { OwnerAnalytics } from '../components/OwnerAnalytics';
+import { PromotionOptionsForm } from '../components/PromotionOptionsForm';
+import { useDeviceCoupons } from '../coupons/useDeviceCoupons';
+import { cancelDevicePromotion, publishDevicePromotion } from '../coupons/deviceStore';
+import { deviceUserKey, isPromotionDownloadable, type DevicePromotion } from '../coupons/model';
+import { scheduleSummary, type PromotionSchedule } from '../coupons/schedule';
 import { weekdays } from '../components/OwnerCalendar';
 import { emptyOwnerDraft, readOwnerDraft, writeOwnerDraft, type OwnerDraft } from '../owner/drafts';
 import { readOwnerReports, writeOwnerReport, type StoredOwnerReport } from '../owner/reports';
@@ -19,7 +24,7 @@ import { koreaObservationTime } from '../owner/analytics';
 import { ownerColors as c, ownerSpace as s, ownerType as t } from '../theme/ownerTokens';
 import { metrics, px } from '../theme/tokens';
 
-type Page = 'main' | 'create' | 'hours' | 'location' | 'setupPerks' | 'perks' | 'closed' | 'notice' | 'submit';
+type Page = 'main' | 'create' | 'hours' | 'location' | 'setupPerks' | 'perks' | 'closed' | 'notice' | 'submit' | 'publish';
 const levels: ReportableCrowdLevel[] = ['AVAILABLE', 'FEW_SEATS', 'LONG_WAIT'];
 function dateLabel(value: string) { const d = new Date(koreaObservationTime(value)); return Number.isNaN(d.getTime()) ? '시간 정보 없음' : d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }); }
 
@@ -39,6 +44,8 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [publishingStage, setPublishingStage] = useState<1 | 2 | 3>(1);
+  const coupons = useDeviceCoupons(user);
   const lock = useRef(false);
   const request = useRef(0);
   const scroll = useRef<ScrollView>(null);
@@ -141,19 +148,23 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
     if (draft) setPage(next);
     else setDialog({ title: '정보 확인 필요', message: '저장한 정보를 불러오지 못했어요. 새로고침 후 다시 시도해 주세요.', confirm: '확인' });
   };
-  const toggleStage = (index: number) => { void mutate(async () => {
-    if (!selected || !draft || !draft.perks[index].trim()) return;
-    const activeStages = draft.activeStages.map((active, i) => i === index ? !active : active) as OwnerDraft['activeStages'];
-    setDraft(await writeOwnerDraft(user!.id, selected.id, { ...draft, activeStages }));
+  const publish = (schedule: PromotionSchedule, pointsCost: number) => { void mutate(async () => {
+    if (!selected || !draft) return;
+    await publishDevicePromotion(user!, selected, publishingStage, draft.perks[publishingStage - 1], schedule, pointsCost);
+    await coupons.refresh(); setPage('main'); setTab('promotion');
   }); };
+  const cancelPublished = (promotion: DevicePromotion) => setDialog({ title: '프로모션 발행을 취소할까요?',
+    message: `${promotion.benefit}\n새 다운로드가 중단돼요. 이미 받은 쿠폰은 각자의 만료 시각까지 사용할 수 있어요.`, cancel: '돌아가기', confirm: '발행 취소',
+    onConfirm: () => { void mutate(async () => { await cancelDevicePromotion(user!, promotion.id); await coupons.refresh(); }); } });
+  const published = coupons.promotions.filter(p => p.ownerKey === (user ? deviceUserKey(user) : '') && p.restaurantId === selectedId && isPromotionDownloadable(p, coupons.now));
   const activeOffers = promotions?.filter(p => p.enabled && koreaObservationTime(p.startAt) <= Date.now() && koreaObservationTime(p.endAt) >= Date.now()) ?? [];
-  const activeStages = draft?.perks.flatMap((perk, i) => draft.activeStages[i] && perk.trim() ? [`${i + 1}단계 · ${perk} (기기)`] : []) ?? [];
+  const activeStages = published.map(p => `${p.stage}단계 · ${p.benefit} (기기)`);
   const activeLabels = [...activeStages, ...activeOffers.map(p => p.title)];
   const businessChange = draft?.businessChange;
 
   return <View style={styles.root}><KeyboardAvoidingView style={styles.shell} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView ref={scroll} style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"
-      refreshControl={page === 'main' ? <RefreshControl refreshing={loading} onRefresh={() => { if (!lock.current) void refresh(); }} /> : undefined}>
+      refreshControl={page === 'main' ? <RefreshControl refreshing={loading || coupons.loading} onRefresh={() => { if (!lock.current) { void refresh(); void coupons.refresh(); } }} /> : undefined}>
       <View style={styles.header}><HeaderLogo />{tab === 'my' && page === 'main' && <Pressable accessibilityRole="button" disabled={busy} onPress={signOut} style={styles.headerAction}><Text style={t.small}>로그아웃</Text></Pressable>}</View>
       <View style={styles.section}>
         {page !== 'main' && selected && page !== 'setupPerks' && <OwnerBack onPress={back} disabled={busy} />}
@@ -164,6 +175,8 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
           !selected ? loading ? <ActivityIndicator color={c.black} /> : null :
           page === 'setupPerks' || page === 'perks' ? draft ? <PerksForm draft={draft} initial={page === 'setupPerks'} busy={busy} onSave={perks => saveDraft({ ...draft, perks })} /> : <ActivityIndicator color={c.black} /> :
           page === 'closed' || page === 'notice' ? draft ? <ScheduleForm key={page} draft={draft} restaurant={selected} mode={page} busy={busy} onSave={saveDraft} /> : <ActivityIndicator color={c.black} /> :
+          page === 'publish' ? draft ? <PromotionOptionsForm key={publishingStage} benefit={draft.perks[publishingStage - 1]} busy={busy} onSave={publish}
+            expiryDescription="게시 기간과 별개로, 받은 쿠폰은 다운로드 후 3일 동안 유효해요." /> : <ActivityIndicator color={c.black} /> :
           page === 'submit' ? <>
             <Text style={t.title}>사장님의{ '\n' }혼잡도 제보가 필요해요</Text>
             <View style={styles.reportCard}><Text style={[t.heading, styles.center]}>혼잡도를 제보해주세요!</Text><View style={styles.levels}>
@@ -174,17 +187,26 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
             <View style={styles.submitSpace}><OwnerButton disabled={!level || busy} onPress={submit}>{busy ? '제보 중...' : '완료'}</OwnerButton></View>
           </> : tab === 'report' ? <>
             <Text style={t.title}>가게 혼잡도 제보</Text><View style={styles.actions}>
-              <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : promotions === null || draft === null ? '프로모션 확인 중' : '현재 프로모션 없음'}</Text>
+              <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : coupons.error ? '기기 프로모션 확인 실패' : promotions === null || coupons.loading ? '프로모션 확인 중' : '현재 프로모션 없음'}</Text>
               <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setLevel(null); setDescription(''); setPage('submit'); }} style={styles.reportButton}><Text style={t.body}>점주가 제보하기</Text></Pressable></View>
             <View style={styles.reportPanel}><Text style={t.heading}>최근 제보</Text><Text style={[t.small, { color: c.muted }]}>이 기기에 저장된 내 제보</Text>
               {!!reportsError && <Text style={t.small}>{reportsError}</Text>}
               {reports.filter(r => r.restaurantId === selectedId).sort((a, b) => koreaObservationTime(b.reportedAt) - koreaObservationTime(a.reportedAt)).map(r => <View key={r.id} style={styles.reportRow}><Text style={t.body}>{user?.nickname} · 점주</Text><CrowdBadge level={r.level} />{!!r.description && <Text style={t.body}>{r.description}</Text>}<Text style={t.small}>{dateLabel(r.reportedAt)}</Text></View>)}
             </View>
           </> : tab === 'promotion' ? <>
-            <View style={styles.titleRow}><Text style={[t.title, styles.flex]}>프로모션</Text><Pressable accessibilityRole="button" accessibilityLabel="프로모션 수정" onPress={() => editDraft('perks')} style={styles.smallAction}><Text style={t.body}>수정</Text></Pressable></View>
-            <Text accessibilityLabel="프로모션 진행 상태는 이 기기에만 저장되며 손님에게 게시되지 않아요" style={[t.small, { color: c.muted }]}>기기 저장</Text>
-            {[0, 1, 2].map(i => <View key={i} style={styles.stage}><View style={styles.titleRow}><Text style={[t.heading, styles.flex]}>{i + 1}단계</Text>{draft?.activeStages[i] && <Text style={t.small}>진행 중</Text>}</View><View style={styles.stageBox}><Text style={t.body}>{draft?.perks[i] || '아직 설정하지 않았어요'}</Text></View>
-              <OwnerButton secondary={draft?.activeStages[i]} disabled={busy || !draft?.perks[i].trim()} onPress={() => toggleStage(i)}>{draft?.activeStages[i] ? '프로모션 중지하기' : '프로모션 진행하기'}</OwnerButton></View>)}
+            <View style={styles.titleRow}><Text style={[t.title, styles.flex]}>프로모션</Text><Pressable accessibilityRole="button" accessibilityLabel="프로모션 수정" disabled={busy} onPress={() => editDraft('perks')} style={styles.smallAction}><Text style={t.body}>수정</Text></Pressable></View>
+            <Text style={[t.small, { color: c.muted }]}>기기 테스트 · 이 기기의 손님 계정에 쿠폰 표시</Text>
+            {!!coupons.error && <View style={styles.errorBox}><Text style={t.small}>{coupons.error}</Text><OwnerButton secondary disabled={busy} onPress={() => { void coupons.refresh(); }}>다시 불러오기</OwnerButton></View>}
+            {[0, 1, 2].map(i => {
+              const active = published.find(p => p.stage === i + 1);
+              return <View key={i} style={styles.stage}><View style={styles.titleRow}><Text style={[t.heading, styles.flex]}>{i + 1}단계</Text>{active && <Text style={t.small}>발행 중</Text>}</View>
+                <View style={styles.stageBox}><Text style={t.body}>{active?.benefit || draft?.perks[i] || '아직 설정하지 않았어요'}</Text></View>
+                {active && <><Text style={t.small}>{active.pointsCost.toLocaleString('ko-KR')}P · {scheduleSummary(active.schedule)}</Text><Text style={t.small}>{active.schedule.noEndDate ? '게시 종료일 없음' : `${active.schedule.endDate}까지 다운로드 가능`}</Text>
+                  {draft?.perks[i] !== active.benefit && <Text style={t.small}>수정한 혜택은 발행 취소 후 다시 발행할 때 적용돼요.</Text>}</>}
+                <OwnerButton secondary={!!active} disabled={busy || coupons.loading || !!coupons.error || (!active && !draft?.perks[i].trim())}
+                  onPress={() => { if (active) cancelPublished(active); else { setPublishingStage((i + 1) as 1 | 2 | 3); setPage('publish'); } }}>{active ? '발행 취소' : '발행하기'}</OwnerButton>
+              </View>;
+            })}
           </> : tab === 'data' ? <OwnerAnalytics key={selected.id} restaurantId={selected.id} points={reports.map(r => ({ time: r.reportedAt, level: r.level }))} tieBreak="latest"
             dataScope="이 기기에 저장된 내 제보 기준" emptyMessage="최근 4주에 이 기기로 작성한 제보가 없어요." loading={loading} error={reportsError} /> : <>
             <Text style={t.title}>내 식당 정보</Text>

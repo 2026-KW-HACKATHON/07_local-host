@@ -24,7 +24,7 @@ export function OwnerButton({ children, onPress, disabled = false, secondary = f
   </Pressable>;
 }
 export function OwnerField({ label, ...props }: TextInputProps & { label: string }) {
-  return <View style={styles.fieldGroup}><Text style={t.body}>{label}</Text><TextInput {...props} accessibilityLabel={label}
+  return <View style={styles.fieldGroup}><Text style={t.body}>{label}</Text><TextInput {...props} accessibilityLabel={props.accessibilityLabel ?? label}
     placeholderTextColor={c.placeholder} style={[styles.input, props.multiline && styles.multiline, props.style]} /></View>;
 }
 export function OwnerInfoRow({ label, value, onPress, action = '수정' }: { label: string; value: string; onPress: () => void; action?: string }) {

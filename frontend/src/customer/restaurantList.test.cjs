@@ -50,3 +50,9 @@ test('only active, enabled, unexpired benefits are shown, never coupon ownership
   assert.equal(activeBenefits(null).length, 0);
   assert.deepEqual(ids(selectRestaurants(rows, '', '프로모션', {})), [1]);
 });
+
+test('promotion filter also shows restaurants with downloadable device coupons', () => {
+  const withCoupons = rows.map(row => ({ ...row, deviceCouponCount: row.restaurant.id === 3 ? 1 : 0 }));
+  assert.deepEqual(ids(selectRestaurants(withCoupons, '', '프로모션', {})), [1, 3]);
+  assert.equal(rows[2].deviceCouponCount, undefined);
+});
