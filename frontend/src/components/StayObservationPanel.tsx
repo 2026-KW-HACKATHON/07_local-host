@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppState, Alert, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import * as Location from 'expo-location';
 import { useAuth } from '../auth/AuthContext';
-import { getStayStatus, hasNativeStayService, startStayService, stopStayService, type StayRestaurant } from '../location/stayService';
+import { getEligibleStayRestaurants, getStayStatus, hasNativeStayService, startStayService, type StayRestaurant } from '../location/stayService';
 import { customerColors as c, customerMetrics as m, customerType as t } from '../theme/customerTokens';
 import { CustomerButton } from './CustomerControls';
 
@@ -38,21 +38,17 @@ export function StayObservationPanel({ onSelect }: { onSelect: (restaurant: Stay
   return <View style={styles.panel}>
     <Text style={t.body}>GPS 식당 체류 확인</Text>
     <Text style={t.small}>{status.message}</Text>
-    {status.running ? <CustomerButton disabled={busy} onPress={() => {
-      setBusy(true); void stopStayService().then(() => setStatus(getStayStatus()))
-        .catch(() => Alert.alert('중지하지 못했어요', '수집 중 알림의 중지 버튼을 이용해 주세요.', [{ text: '확인' }]))
-        .finally(() => setBusy(false));
-    }}>위치 수집 중지</CustomerButton> : hasNativeStayService ? <CustomerButton disabled={busy} onPress={() => Alert.alert(
+    {!status.running && hasNativeStayService ? <CustomerButton disabled={busy} onPress={() => Alert.alert(
       'GPS 체류 확인을 시작할까요?',
-      '화면을 끄거나 다른 앱을 사용하는 동안에도 정확한 위치를 관측해요. 같은 곳에서 5분 체류하면 그 구간의 GPS 위치를 밥줄 서버로 보내 근처 식당을 조회해요. 원본 위치는 기기에 저장하지 않으며, 앱 또는 수집 중 알림에서 언제든 중지할 수 있어요.',
+      '화면을 끄거나 다른 앱을 사용하는 동안에도 정확한 위치를 관측해요. 같은 곳에서 5분 체류하면 그 구간의 GPS 위치를 밥줄 서버로 보내 50m 안의 식당을 조회하고 제보 알림을 보내요. 원본 위치는 기기에 저장하지 않아요. 수집 중 알림의 중지 버튼 또는 로그아웃으로 언제든 중지할 수 있어요.',
       [{ text: '취소', style: 'cancel' }, { text: '동의하고 시작', onPress: () => { void start(); } }],
     )}>{busy ? '시작 중...' : '동의하고 체류 확인 시작'}</CustomerButton> : null}
-    {status.recommendation?.restaurants.map(restaurant => <Pressable key={restaurant.id} accessibilityRole="button"
+    {getEligibleStayRestaurants(status).map(restaurant => <Pressable key={restaurant.id} accessibilityRole="button"
       style={styles.candidate} onPress={() => onSelect(restaurant)}>
       <Text style={t.body}>{restaurant.name}</Text><Text style={t.small}>{restaurant.address} {restaurant.floor ?? ''}</Text>
       <Text style={t.small}>현재 위치에서 {restaurant.distanceMeters}m · 입장 확인하기</Text>
     </Pressable>)}
-    {status.running && <Text style={[t.small, styles.note]}>강제 종료·전원 꺼짐·권한 취소 시 관측은 중단돼요. GPS만으로 입장을 확정하지 않아요.</Text>}
+    {status.running && <Text style={[t.small, styles.note]}>같은 곳에서 5분 머무르면 50m 안의 식당을 제보할 수 있어요. 수집 중 알림이나 로그아웃으로 관측을 중지할 수 있어요. 강제 종료·전원 꺼짐·권한 취소 시에도 중단돼요.</Text>}
   </View>;
 }
 const styles = StyleSheet.create({

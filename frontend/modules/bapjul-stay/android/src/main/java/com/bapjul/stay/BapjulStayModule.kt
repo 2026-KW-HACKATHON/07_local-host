@@ -11,7 +11,10 @@ class BapjulStayModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("BapjulStay")
     Function("getStatus") {
-      BapjulStayService.status.toString()
+      BapjulStayService.readStatus()
+    }
+    Function("setAppActive") { active: Boolean ->
+      BapjulStayService.appActive = active
     }
     AsyncFunction("start") { baseUrl: String, token: String ->
       if (Build.VERSION.SDK_INT < 26) throw IllegalStateException("체류 확인은 Android 8 이상에서 사용할 수 있어요.")
