@@ -1,0 +1,10 @@
+node_modules/
+.expo/
+dist/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+# app.json + plugins + modules에서 재생성하는 네이티브 빌드 디렉터리
+/android/
