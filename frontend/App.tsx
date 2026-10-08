@@ -204,6 +204,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.brandYellow,
+    backgroundColor: colors.onboardingYellow,
   },
 });

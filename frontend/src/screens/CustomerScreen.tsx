@@ -151,7 +151,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const submit = async () => {
     if (!token || !user || !reportRestaurant || !level || reportInFlight.current) return;
     if (!isConfirmedCandidate(reportRestaurant.id)) {
-      Alert.alert('GPS 체류 확인이 필요해요', '체류 확인을 시작하고 5분 후 추천된 식당을 선택해 주세요. Expo Go에서는 제보 화면을 미리볼 수 있지만 GPS 확인과 제출은 APK가 필요해요.', [{ text: '확인' }]);
+      Alert.alert('GPS 체류 확인이 필요해요', '체류 확인을 시작하고 5분 후 추천된 식당을 선택해 주세요.', [{ text: '확인' }]);
       return;
     }
     reportInFlight.current = true;
@@ -244,7 +244,6 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           {selected.promotions === null ? <Text style={t.small}>할인 혜택을 불러오지 못했어요. 화면을 아래로 당겨 다시 확인해 주세요.</Text> : selectedBenefits.map(promotion => <View key={promotion.id} style={styles.promotion}>
             <Text style={t.body}>{promotion.title}</Text><Text style={t.small}>{promotion.description}</Text>
             <Text style={t.small}>{promotion.discountPercent}% 할인 · {dateLabel(promotion.endAt)}까지</Text>
-            <Text style={[t.small, styles.muted]}>서버에 등록된 할인 안내</Text>
           </View>)}
           {!!coupons.error && <Text accessibilityRole="alert" style={t.small}>{coupons.error}</Text>}
           {user && <DownloadableCoupons key={`${user.id}:${user.email}:${selected.restaurant.id}`} user={user} wallet={coupons.wallet} now={coupons.now}
@@ -252,7 +251,6 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           <View style={[styles.panel, styles.statusPanel]}><Text style={t.heading}>현재 혼잡도</Text>
             {selected.crowd ? <><CrowdBadge level={selected.crowd.level} /><Text style={t.small}>제보 {selected.crowd.reportCount}건</Text>
               <Text style={t.small}>{selected.crowd.updatedAt ? `마지막 제보 ${dateLabel(selected.crowd.updatedAt)}` : '아직 제보가 없어요.'}</Text></> : <Text style={t.body}>혼잡도를 불러오지 못했어요.</Text>}
-            <Text style={[t.small, styles.muted]}>개별 제보자 목록은 아직 제공되지 않아요.</Text>
           </View>
           <CustomerButton onPress={() => beginReport(selected.restaurant)}>이 식당 제보하기</CustomerButton>
           <Pressable accessibilityRole="button" onPress={() => setShowChart(true)}><Text style={[t.small, styles.link]}>이전 제보는 통계표를 확인하세요</Text></Pressable>

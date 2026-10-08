@@ -4,6 +4,7 @@ export const colors = {
   black: '#000000',
   white: '#FFFFFF',
   brandYellow: '#FCD325',
+  onboardingYellow: '#EED451',
   neutralButton: '#D9D9D9',
   field: '#E1E0E0',
   // Figma 로그인 입력창의 텍스트: #000000, 불투명도 55%.

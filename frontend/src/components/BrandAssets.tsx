@@ -5,6 +5,8 @@ import { px } from '../theme/tokens';
 
 // The supplied SVG contains this exact PNG. Keep its pixels and transparency intact.
 const bowl = require('../../assets/brand/bapjul-logo.png');
+const onboardingBowl = require('../../assets/brand/bapjul-onboarding-bowl.png');
+const onboardingWordmark = require('../../assets/brand/bapjul-onboarding-wordmark.png');
 const wordmark = require('../../assets/brand/bapjul-wordmark.png');
 
 export function BrandComposition({ style }: { style?: StyleProp<ViewStyle> }) {
@@ -14,6 +16,13 @@ export function BrandComposition({ style }: { style?: StyleProp<ViewStyle> }) {
       <Image accessible={false} source={wordmark} resizeMode="contain" style={styles.wordmark} />
     </View>
   );
+}
+
+export function OnboardingBrand({ style }: { style?: StyleProp<ViewStyle> }) {
+  return <View accessible accessibilityRole="image" accessibilityLabel="밥줄" style={[styles.onboarding, style]}>
+    <Image accessible={false} source={onboardingBowl} resizeMode="contain" style={styles.onboardingBowl} />
+    <Image accessible={false} source={onboardingWordmark} resizeMode="contain" style={styles.onboardingWordmark} />
+  </View>;
 }
 
 export function HeaderLogo({ style }: { style?: StyleProp<ViewStyle> }) {
@@ -39,6 +48,23 @@ const styles = StyleSheet.create({
     marginTop: px(38),
     width: px(191),
     height: px(95),
+    flexShrink: 0,
+  },
+  onboarding: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '68%',
+    // frontend-b uses a gap equal to 2% of the full screen width.
+    columnGap: '2.94%',
+  },
+  onboardingBowl: {
+    flexShrink: 0,
+    width: '50%',
+    aspectRatio: 1198 / 944,
+  },
+  onboardingWordmark: {
+    width: '47%',
+    aspectRatio: 1189 / 593,
     flexShrink: 0,
   },
   headerLogo: {
