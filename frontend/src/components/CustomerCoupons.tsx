@@ -74,7 +74,7 @@ export function CustomerCouponWallet({ user, wallet, now, disabled, onChanged }:
     lock.current = true; setBusy(true);
     try {
       await useDeviceCoupon(user, coupon.id); await onChanged();
-      setDialog({ title: '사용 완료', message: `${coupon.restaurantName}\n${coupon.benefit}\n쿠폰 사용을 기기에 기록했어요.`, confirm: '확인' });
+      setDialog({ title: '사용 완료', message: `${coupon.restaurantName}\n${coupon.benefit}\n쿠폰 사용이 완료됐어요.`, confirm: '확인' });
     } catch (failure) {
       setDialog({ title: '쿠폰을 사용하지 못했어요', message: failure instanceof Error ? failure.message : '잠시 후 다시 시도해 주세요.', confirm: '확인' });
     } finally { lock.current = false; setBusy(false); }

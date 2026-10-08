@@ -18,7 +18,7 @@ export function BrandComposition({ style }: { style?: StyleProp<ViewStyle> }) {
 
 export function HeaderLogo({ style }: { style?: StyleProp<ViewStyle> }) {
   return <View accessible accessibilityRole="image" accessibilityLabel="밥줄" style={[styles.headerLogo, style]}>
-    <Image accessible={false} source={wordmark} resizeMode="contain" style={styles.headerLogo} />
+    <Image accessible={false} source={wordmark} resizeMode="contain" style={styles.headerLogoImage} />
   </View>;
 }
 
@@ -42,7 +42,15 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   headerLogo: {
+    // The supplied wordmark has transparent padding on both sides. Crop that
+    // padding so the visible first letter aligns with the content below it.
+    width: px(131),
+    height: px(79),
+    overflow: 'hidden',
+  },
+  headerLogoImage: {
     width: px(159),
     height: px(79),
+    transform: [{ translateX: px(-28) }],
   },
 });

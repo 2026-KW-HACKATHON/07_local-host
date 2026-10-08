@@ -131,7 +131,7 @@ export function SignupScreen({
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(18),
-    marginLeft: px(-2),
+    marginLeft: px(15),
     alignSelf: 'flex-start',
   },
   title: {

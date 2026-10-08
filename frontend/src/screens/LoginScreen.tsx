@@ -104,7 +104,7 @@ export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: Lo
 const styles = StyleSheet.create({
   logo: {
     marginTop: px(17),
-    marginLeft: px(-2),
+    marginLeft: px(15),
     alignSelf: 'flex-start',
   },
   title: {

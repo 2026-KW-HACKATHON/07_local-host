@@ -74,7 +74,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
       setPromotions(results[0].status === 'fulfilled' ? results[0].value : null);
       setDraft(results[1].status === 'fulfilled' ? results[1].value : null);
       if (results[2].status === 'fulfilled') { setReports(results[2].value); setReportsError(''); }
-      else setReportsError('이 기기의 제보를 불러오지 못했어요.');
+      else setReportsError('제보 내역을 불러오지 못했어요.');
       if (results.some(r => r.status === 'rejected')) setError('일부 정보를 불러오지 못했어요. 다시 시도해 주세요.');
     } catch (e) { if (version === request.current) setError(getApiErrorMessage(e, 'request')); }
     finally { if (version === request.current) setLoading(false); }
@@ -114,7 +114,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
         // The restaurant already exists on the server: do not leave the create
         // form open and accidentally POST a duplicate when the user retries.
         changeRestaurant(result.id); setPage('main'); setTab('my');
-        setDialog({ title: '식당은 등록됐어요', message: '정기 휴무일을 이 기기에 저장하지 못했어요. My에서 다시 설정해 주세요.', confirm: '확인' });
+        setDialog({ title: '식당은 등록됐어요', message: '정기 휴무일을 저장하지 못했어요. My에서 다시 설정해 주세요.', confirm: '확인' });
         return;
       }
       changeRestaurant(result.id); setDraft(preferences); setPage('setupPerks');
@@ -131,16 +131,16 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
   const submit = () => {
     if (!level || !selected) return;
     const id = selected.id; const submittedLevel = level; const submittedDescription = description.trim();
-    setDialog({ title: '혼잡도 제보', message: `${selected.name}\n${crowdLabels[level]} 상태로 제보할까요?${submittedDescription ? '\n추가 설명은 이 기기에 저장돼요.' : ''}`, cancel: '아니요', confirm: '예', onConfirm: () => { void mutate(async () => {
+    setDialog({ title: '혼잡도 제보', message: `${selected.name}\n${crowdLabels[level]} 상태로 제보할까요?${submittedDescription ? '\n추가 설명도 함께 저장돼요.' : ''}`, cancel: '아니요', confirm: '예', onConfirm: () => { void mutate(async () => {
       const result = await reportCrowd(id, { level: submittedLevel }, token!);
       const saved = { ...result, description: submittedDescription };
       setReports(previous => [saved, ...previous.filter(r => r.id !== saved.id)]); setLevel(null); setDescription(''); setPage('main');
       try { await writeOwnerReport(user!.id, id, saved); }
       catch {
-        setDialog({ title: '혼잡도는 전송됐어요', message: '제보 내역과 추가 설명을 이 기기에 저장하지 못했어요. 혼잡도를 다시 전송할 필요는 없어요.', confirm: '확인' });
+        setDialog({ title: '혼잡도는 전송됐어요', message: '제보 내역과 추가 설명을 저장하지 못했어요. 혼잡도를 다시 전송할 필요는 없어요.', confirm: '확인' });
         return;
       }
-      await refresh(); setDialog({ title: '제보가 완료됐어요', message: submittedDescription ? '혼잡도를 전송하고 추가 설명을 이 기기에 저장했어요.' : '가게 혼잡도에 반영했어요.', confirm: '확인' });
+      await refresh(); setDialog({ title: '제보가 완료됐어요', message: submittedDescription ? '혼잡도와 추가 설명을 저장했어요.' : '가게 혼잡도에 반영했어요.', confirm: '확인' });
     }); } });
   };
   const signOut = () => setDialog({ title: '로그아웃', message: '로그아웃할까요?', cancel: '취소', confirm: '로그아웃', onConfirm: () => { void mutate(async () => { await logout(); onLogout(); }); } });
@@ -158,7 +158,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
     onConfirm: () => { void mutate(async () => { await cancelDevicePromotion(user!, promotion.id); await coupons.refresh(); }); } });
   const published = coupons.promotions.filter(p => p.ownerKey === (user ? deviceUserKey(user) : '') && p.restaurantId === selectedId && isPromotionDownloadable(p, coupons.now));
   const activeOffers = promotions?.filter(p => p.enabled && koreaObservationTime(p.startAt) <= Date.now() && koreaObservationTime(p.endAt) >= Date.now()) ?? [];
-  const activeStages = published.map(p => `${p.stage}단계 · ${p.benefit} (기기)`);
+  const activeStages = published.map(p => `${p.stage}단계 · ${p.benefit}`);
   const activeLabels = [...activeStages, ...activeOffers.map(p => p.title)];
   const businessChange = draft?.businessChange;
 
@@ -187,15 +187,14 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
             <View style={styles.submitSpace}><OwnerButton disabled={!level || busy} onPress={submit}>{busy ? '제보 중...' : '완료'}</OwnerButton></View>
           </> : tab === 'report' ? <>
             <Text style={t.title}>가게 혼잡도 제보</Text><View style={styles.actions}>
-              <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : coupons.error ? '기기 프로모션 확인 실패' : promotions === null || coupons.loading ? '프로모션 확인 중' : '현재 프로모션 없음'}</Text>
+              <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : coupons.error ? '프로모션 확인 실패' : promotions === null || coupons.loading ? '프로모션 확인 중' : '현재 프로모션 없음'}</Text>
               <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setLevel(null); setDescription(''); setPage('submit'); }} style={styles.reportButton}><Text style={t.body}>점주가 제보하기</Text></Pressable></View>
-            <View style={styles.reportPanel}><Text style={t.heading}>최근 제보</Text><Text style={[t.small, { color: c.muted }]}>이 기기에 저장된 내 제보</Text>
+            <View style={styles.reportPanel}><Text style={t.heading}>최근 제보</Text><Text style={[t.small, { color: c.muted }]}>내가 작성한 제보</Text>
               {!!reportsError && <Text style={t.small}>{reportsError}</Text>}
               {reports.filter(r => r.restaurantId === selectedId).sort((a, b) => koreaObservationTime(b.reportedAt) - koreaObservationTime(a.reportedAt)).map(r => <View key={r.id} style={styles.reportRow}><Text style={t.body}>{user?.nickname} · 점주</Text><CrowdBadge level={r.level} />{!!r.description && <Text style={t.body}>{r.description}</Text>}<Text style={t.small}>{dateLabel(r.reportedAt)}</Text></View>)}
             </View>
           </> : tab === 'promotion' ? <>
             <View style={styles.titleRow}><Text style={[t.title, styles.flex]}>프로모션</Text><Pressable accessibilityRole="button" accessibilityLabel="프로모션 수정" disabled={busy} onPress={() => editDraft('perks')} style={styles.smallAction}><Text style={t.body}>수정</Text></Pressable></View>
-            <Text style={[t.small, { color: c.muted }]}>기기 테스트 · 이 기기의 손님 계정에 쿠폰 표시</Text>
             {!!coupons.error && <View style={styles.errorBox}><Text style={t.small}>{coupons.error}</Text><OwnerButton secondary disabled={busy} onPress={() => { void coupons.refresh(); }}>다시 불러오기</OwnerButton></View>}
             {[0, 1, 2].map(i => {
               const active = published.find(p => p.stage === i + 1);
@@ -208,7 +207,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
               </View>;
             })}
           </> : tab === 'data' ? <OwnerAnalytics key={selected.id} restaurantId={selected.id} points={reports.map(r => ({ time: r.reportedAt, level: r.level }))} tieBreak="latest"
-            dataScope="이 기기에 저장된 내 제보 기준" emptyMessage="최근 4주에 이 기기로 작성한 제보가 없어요." loading={loading} error={reportsError} /> : <>
+            dataScope="내가 작성한 제보 기준" emptyMessage="최근 4주에 작성한 제보가 없어요." loading={loading} error={reportsError} /> : <>
             <Text style={t.title}>내 식당 정보</Text>
             <OwnerInfoRow label="정기 휴무일" value={draft ? draft.closedDays.length ? `매주 ${draft.closedDays.map(d => weekdays[d]).join('·')}요일` : '설정된 정기 휴무 없음' : '정보 확인 필요'} onPress={() => editDraft('closed')} />
             <OwnerInfoRow label="영업 시간" value={`${selected.openingTime?.slice(0, 5) ?? '미등록'} ~ ${selected.closingTime?.slice(0, 5) ?? '미등록'}`} onPress={() => setPage('hours')} />

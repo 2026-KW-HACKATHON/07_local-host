@@ -143,7 +143,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
         ? `식당의 혼잡도를 알려주셔서 고마워요.\n+${result.awarded.toLocaleString('ko-KR')}P 적립\n현재 ${result.balance.toLocaleString('ko-KR')}P`
         : `제보 포인트가 이미 반영됐어요.\n현재 ${result.balance.toLocaleString('ko-KR')}P`, confirm: '확인' });
     } catch {
-      setDialog({ title: '제보는 저장됐어요', message: '포인트를 이 기기에 저장하지 못했어요. 제보를 다시 보내지 않고 적립만 다시 시도할 수 있어요.',
+      setDialog({ title: '제보는 저장됐어요', message: '포인트를 저장하지 못했어요. 제보를 다시 보내지 않고 적립만 다시 시도할 수 있어요.',
         cancel: '닫기', confirm: '적립 다시 시도', onConfirm: () => { void creditReport(response); } });
     }
   };
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 }, content: { flexGrow: 1 },
   header: { paddingTop: m.headerTop, paddingHorizontal: m.gutter, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   logout: { minHeight: px(48), paddingLeft: px(16), justifyContent: 'center' },
-  searchWrap: { alignItems: 'center', marginTop: m.headerGap, paddingHorizontal: m.gutter },
+  searchWrap: { alignItems: 'flex-start', marginTop: m.headerGap, paddingHorizontal: m.gutter },
   section: { paddingHorizontal: m.gutter, gap: m.sectionGap, paddingTop: m.sectionGap, paddingBottom: m.sectionGap },
   panel: { backgroundColor: c.panel, borderRadius: m.panelRadius, overflow: 'hidden' },
   panelTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: m.gutter, paddingVertical: px(12), gap: px(8) },
