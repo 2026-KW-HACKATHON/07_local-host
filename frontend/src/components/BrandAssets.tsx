@@ -6,7 +6,7 @@ import { px } from '../theme/tokens';
 // The supplied SVG contains this exact PNG. Keep its pixels and transparency intact.
 const bowl = require('../../assets/brand/bapjul-logo.png');
 const onboardingBowl = require('../../assets/brand/bapjul-onboarding-bowl.png');
-const onboardingWordmark = require('../../assets/brand/bapjul-onboarding-wordmark.png');
+// Use the supplied PNG directly; do not stretch it or re-encode its pixels.
 const wordmark = require('../../assets/brand/bapjul-wordmark.png');
 
 export function BrandComposition({ style }: { style?: StyleProp<ViewStyle> }) {
@@ -21,7 +21,7 @@ export function BrandComposition({ style }: { style?: StyleProp<ViewStyle> }) {
 export function OnboardingBrand({ style }: { style?: StyleProp<ViewStyle> }) {
   return <View accessible accessibilityRole="image" accessibilityLabel="밥줄" style={[styles.onboarding, style]}>
     <Image accessible={false} source={onboardingBowl} resizeMode="contain" style={styles.onboardingBowl} />
-    <Image accessible={false} source={onboardingWordmark} resizeMode="contain" style={styles.onboardingWordmark} />
+    <Image accessible={false} source={wordmark} resizeMode="contain" style={styles.onboardingWordmark} />
   </View>;
 }
 
@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
   wordmark: {
     marginLeft: px(-31),
     marginTop: px(38),
-    width: px(191),
-    height: px(95),
+    width: px(159),
+    aspectRatio: 159 / 79,
     flexShrink: 0,
   },
   onboarding: {
@@ -64,11 +64,11 @@ const styles = StyleSheet.create({
   },
   onboardingWordmark: {
     width: '47%',
-    aspectRatio: 1189 / 593,
+    aspectRatio: 159 / 79,
     flexShrink: 0,
   },
   headerLogo: {
-    // The supplied wordmark has transparent padding on both sides. Crop that
+    // The supplied 159×79 PNG starts drawing at x=25. Hide only the transparent
     // padding so the visible first letter aligns with the content below it.
     width: px(131),
     height: px(79),
@@ -77,6 +77,6 @@ const styles = StyleSheet.create({
   headerLogoImage: {
     width: px(159),
     height: px(79),
-    transform: [{ translateX: px(-28) }],
+    transform: [{ translateX: px(-25) }],
   },
 });

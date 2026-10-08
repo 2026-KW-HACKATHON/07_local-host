@@ -7,7 +7,7 @@ const source = file => fs.readFileSync(path.join(__dirname, file), 'utf8');
 
 test('visible wordmark starts at the same left edge as the content below it', () => {
   const brand = source('BrandAssets.tsx');
-  assert.match(brand, /headerLogoImage:[\s\S]*translateX: px\(-28\)/);
+  assert.match(brand, /headerLogoImage:[\s\S]*translateX: px\(-25\)/);
   assert.match(brand, /headerLogo:[\s\S]*width: px\(131\)[\s\S]*overflow: 'hidden'/);
 
   for (const screen of ['../screens/LoginScreen.tsx', '../screens/WelcomeScreen.tsx', '../screens/RoleScreen.tsx', '../screens/SignupScreen.tsx']) {
