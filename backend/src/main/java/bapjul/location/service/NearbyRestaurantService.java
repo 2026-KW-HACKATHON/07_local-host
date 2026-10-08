@@ -13,7 +13,7 @@ import java.util.List;
 
 @Service
 public class NearbyRestaurantService {
-    public static final double SEARCH_RADIUS_METERS = 50.0;
+    public static final double SEARCH_RADIUS_METERS = 20.0;
     public static final int MAX_RESULTS = 3;
     private final RestaurantCatalog catalog;
     private final Clock clock;
