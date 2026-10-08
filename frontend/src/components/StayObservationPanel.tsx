@@ -5,8 +5,10 @@ import { useAuth } from '../auth/AuthContext';
 import { getEligibleStayRestaurants, getStayStatus, hasNativeStayService, startStayService, type StayRestaurant } from '../location/stayService';
 import { customerColors as c, customerMetrics as m, customerType as t } from '../theme/customerTokens';
 import { CustomerButton } from './CustomerControls';
+import type { Restaurant } from '../api/types';
+import { RestaurantBusinessHours } from './RestaurantBusinessHours';
 
-export function StayObservationPanel({ onSelect }: { onSelect: (restaurant: StayRestaurant) => void }) {
+export function StayObservationPanel({ onSelect, restaurants = [] }: { onSelect: (restaurant: StayRestaurant) => void; restaurants?: Restaurant[] }) {
   const { token } = useAuth();
   const [status, setStatus] = useState(getStayStatus);
   const [busy, setBusy] = useState(false);
@@ -43,11 +45,14 @@ export function StayObservationPanel({ onSelect }: { onSelect: (restaurant: Stay
       '화면을 끄거나 다른 앱을 사용하는 동안에도 정확한 위치를 관측해요. 같은 곳에서 5분 체류하면 그 구간의 GPS 위치를 밥줄 서버로 보내 50m 안의 식당을 조회하고 제보 알림을 보내요. 원본 위치는 기기에 저장하지 않아요. 수집 중 알림의 중지 버튼 또는 로그아웃으로 언제든 중지할 수 있어요.',
       [{ text: '취소', style: 'cancel' }, { text: '동의하고 시작', onPress: () => { void start(); } }],
     )}>{busy ? '시작 중...' : '동의하고 체류 확인 시작'}</CustomerButton> : null}
-    {getEligibleStayRestaurants(status).map(restaurant => <Pressable key={restaurant.id} accessibilityRole="button"
+    {getEligibleStayRestaurants(status).map(restaurant => {
+      const registered = restaurants.find(item => String(item.id) === restaurant.id);
+      return <Pressable key={restaurant.id} accessibilityRole="button"
       style={styles.candidate} onPress={() => onSelect(restaurant)}>
       <Text style={t.body}>{restaurant.name}</Text><Text style={t.small}>{restaurant.address} {restaurant.floor ?? ''}</Text>
+      <RestaurantBusinessHours openingTime={registered?.openingTime} closingTime={registered?.closingTime} />
       <Text style={t.small}>현재 위치에서 {restaurant.distanceMeters}m · 입장 확인하기</Text>
-    </Pressable>)}
+    </Pressable>; })}
     {status.running && <Text style={[t.small, styles.note]}>같은 곳에서 5분 머무르면 50m 안의 식당을 제보할 수 있어요. 수집 중 알림이나 로그아웃으로 관측을 중지할 수 있어요. 강제 종료·전원 꺼짐·권한 취소 시에도 중단돼요.</Text>}
   </View>;
 }

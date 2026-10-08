@@ -6,7 +6,7 @@ import { px } from '../theme/tokens';
 import { naverSearchUrls } from '../customer/restaurantList';
 
 /** Show Naver's own results without scraping them or giving the page app tokens/GPS. */
-export function CustomerNaverSearch({ query, onClose }: { query: string; onClose: () => void }) {
+export function CustomerNaverSearch({ query, onClose, caption = '네이버 지도 결과예요 · 밥줄 제보와 쿠폰은 홈에서 확인하세요' }: { query: string; onClose: () => void; caption?: string }) {
   const web = useRef<WebView>(null);
   const [canGoBack, setCanGoBack] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export function CustomerNaverSearch({ query, onClose }: { query: string; onClose
         <Text numberOfLines={1} style={[t.body, styles.title]}>네이버 식당 검색</Text>
         <Pressable accessibilityRole="button" accessibilityLabel="네이버 검색 닫기" onPress={onClose} style={styles.action}><Text style={t.small}>닫기</Text></Pressable>
       </View>
-      <Text style={[t.small, styles.caption]}>네이버 지도 결과예요 · 밥줄 제보와 쿠폰은 홈에서 확인하세요</Text>
+      <Text style={[t.small, styles.caption]}>{caption}</Text>
       {loading && !error && <ActivityIndicator accessibilityLabel="네이버 검색 결과 불러오는 중" style={styles.loading} color={c.black} />}
       {notice !== '' && <Text style={[t.small, styles.caption]}>{notice}</Text>}
       {error ? <View style={styles.failure}><Text style={t.body}>{error}</Text>

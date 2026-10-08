@@ -13,6 +13,7 @@ import { CustomerRestaurantSheet } from '../components/CustomerRestaurantSheet';
 import { CustomerProfile } from '../components/CustomerProfile';
 import { CustomerNaverSearch } from '../components/CustomerNaverSearch';
 import { StayObservationPanel } from '../components/StayObservationPanel';
+import { RestaurantBusinessHours } from '../components/RestaurantBusinessHours';
 import { getEligibleStayRestaurants, getStayStatus, isStayReportLink } from '../location/stayService';
 import { useStayReportPrompt } from '../location/useStayReportPrompt';
 import { activeBenefits, distanceLabel, naverSearchUrls, RESTAURANT_PAGE_SIZE, selectRestaurants, type RestaurantSort, type RestaurantSummary } from '../customer/restaurantList';
@@ -198,7 +199,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       </CustomerButton>}
     </View>}
   </>;
-  const stayPanel = <StayObservationPanel onSelect={candidate => {
+  const stayPanel = <StayObservationPanel restaurants={rows.map(row => row.restaurant)} onSelect={candidate => {
     const restaurant = rows.find(row => String(row.restaurant.id) === candidate.id)?.restaurant;
     if (restaurant) beginReport(restaurant);
     else Alert.alert('식당 정보 확인 필요', '식당 목록을 새로고침한 뒤 다시 선택해 주세요.', [{ text: '확인', onPress: () => { void refresh(); } }]);
@@ -256,6 +257,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
         {reportRestaurant ? <>
           <Pressable accessibilityRole="button" disabled={submitting} onPress={() => { setReportId(null); setLevel(null); }}><Text style={t.body}>‹ 다른 식당 선택</Text></Pressable>
           <Text style={t.heading}>{reportRestaurant.name}</Text><Text style={t.small}>{reportRestaurant.address}</Text>
+          <RestaurantBusinessHours openingTime={reportRestaurant.openingTime} closingTime={reportRestaurant.closingTime} />
           <View style={styles.reportCard}><Text style={[t.heading, styles.centerText]}>혼잡도를 제보해 주세요!</Text>
             <View style={styles.levelChoices}>
             {levels.map(value => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: level === value, disabled: submitting }}
