@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eed451">
+  <title>밥줄 · 시작하기</title>
+  <link rel="stylesheet" href="/onboarding.css">
+  <script src="/onboarding.js" defer></script>
+</head>
+<body>
+  <main class="onboarding" data-screen="start">
+    <div class="brand">
+      <img class="bowl" src="/assets/bapjul-onboarding-bowl.png" alt="">
+      <img class="wordmark" src="/assets/bapjul-onboarding-wordmark.png" alt="밥줄">
+    </div>
+    <section class="permission location" aria-labelledby="location-title" hidden>
+      <div class="permission-copy">
+        <svg class="permission-icon" viewBox="0 0 32 40" fill="none" aria-hidden="true"><path d="M16 37S4 23 4 15a12 12 0 1 1 24 0c0 8-12 22-12 22Z" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"/><circle cx="16" cy="15" r="5.5" stroke="currentColor" stroke-width="2.3"/></svg>
+        <h1 id="location-title" tabindex="-1"><strong>밥줄</strong>에서 이 기기의 위치 정보에<br>액세스하도록 허용하시겠습니까?</h1>
+        <ul><li>주변 맛집 탐색</li><li>매장까지 거리 계산</li></ul>
+      </div>
+      <div class="choices" role="group" aria-label="위치 정보 사용 선택">
+        <button type="button" data-choice="while-using">앱 사용 중에만 허용</button>
+        <button type="button" data-choice="once">이번만 허용</button>
+        <button type="button" data-choice="deny">허용 안함</button>
+      </div>
+    </section>
+    <section class="permission notification" aria-labelledby="notification-title" hidden>
+      <div class="permission-copy">
+        <svg class="permission-icon" viewBox="0 0 36 40" fill="none" aria-hidden="true"><path d="M8 26V14a10 10 0 0 1 20 0v12l4 5H4l4-5Z" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 33a4 4 0 0 0 8 0" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+        <h1 id="notification-title" tabindex="-1"><strong>밥줄</strong>에서 알림을 보내도록<br>허용하시겠습니까?</h1>
+      </div>
+      <div class="choices" role="group" aria-label="알림 사용 선택">
+        <button type="button" data-choice="while-using" aria-pressed="false">앱 사용 중에만 허용</button>
+        <button type="button" data-choice="once" aria-pressed="false">이번만 허용</button>
+        <button type="button" data-choice="deny" aria-pressed="false">허용 안함</button>
+      </div>
+    </section>
+    <p class="status" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>

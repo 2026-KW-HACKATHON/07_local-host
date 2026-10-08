@@ -1,0 +1,31 @@
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+body { background: #f5f5f5; color: #080808; font-family: Arial, "Malgun Gothic", sans-serif; }
+button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+/* Keep short windows scrollable while preserving space between the brand and card. */
+.onboarding { position: relative; container-type: inline-size; width: 100%; max-width: 412px; height: 100svh; min-height: min(840px, 205vw); margin: 0 auto; background: #eed451; overflow: hidden; }
+.brand { position: absolute; left: 14%; top: 39.6%; display: flex; align-items: center; gap: 2cqw; width: 68%; padding: 0; border: 0; background: transparent; }
+.bowl { display: block; width: 50%; height: auto; }
+.wordmark { display: block; width: 47%; height: auto; }
+.permission { position: absolute; left: 11%; width: 78%; border-radius: 6cqw; background: #fff; overflow: hidden; }
+.location { top: 54.1%; }
+.notification { top: 55.65%; }
+.permission-copy { padding-top: 2.4cqw; }
+.permission-icon { display: block; width: 7.2cqw; height: 8cqw; margin: 0 auto; }
+h1 { margin: 2.2cqw 0 0; padding: 0 3cqw; font-size: 4.5cqw; font-weight: 400; line-height: 1.22; letter-spacing: -0.035em; white-space: nowrap; text-align: center; }
+h1 strong { font-weight: 800; }
+h1:focus { outline: none; }
+.location .permission-copy { min-height: 43cqw; }
+.location ul { padding: 0; margin: 7cqw 0 3cqw; list-style: none; font-size: 4.3cqw; line-height: 1.35; letter-spacing: -0.025em; text-align: center; }
+.location li::before { content: '• '; }
+.notification .permission-copy { min-height: 29cqw; padding-top: 3cqw; }
+.notification h1 { margin-top: 3cqw; padding: 0 3cqw; white-space: nowrap; }
+.choices { display: flex; flex-direction: column; border-top: 1px solid #111; padding: 1.8cqw 0; }
+.choices button { min-height: 9cqw; padding: 1.4cqw 3cqw; border: 0; background: transparent; font-size: 4.6cqw; font-weight: 700; line-height: 1.3; color: #080808; cursor: pointer; text-align: center; }
+.notification .choices { padding: 2.4cqw 0; }
+.notification .choices button { min-height: 9cqw; }
+.choices button:hover { background: #faf4d6; }
+.choices button:active, .choices button[aria-pressed="true"] { background: #fff1b3; }
+.choices button:focus-visible { outline: 2px solid #7a571d; outline-offset: -4px; }
+.status { position: absolute; bottom: 1.6%; width: 100%; margin: 0; padding: 0 4cqw; text-align: center; font-size: 3.4cqw; color: #492713; }

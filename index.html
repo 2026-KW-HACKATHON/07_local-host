@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#ffffff">
+<title>밥줄 · 점주 식당 정보</title><link rel="stylesheet" href="/styles.css"><script src="/app.js" defer></script>
+</head>
+<body>
+<main class="page">
+<img class="logo" src="/assets/bapjul-wordmark.png" alt="밥줄">
+<h1><span class="step">1단계</span><span class="heading">식당 정보를 입력해주세요</span></h1>
+<form id="restaurant-form">
+<button class="field branch" id="branch" type="button" aria-haspopup="dialog">지점 검색...</button>
+<button class="field hours" id="hours" type="button" aria-haspopup="dialog">영업 시간</button>
+<button class="field holidays" id="holidays" type="button" aria-haspopup="dialog">정기 휴무일</button>
+<p class="message" id="message" role="status" aria-live="polite"></p>
+<button class="confirm" type="submit">확인</button>
+</form>
+</main>
+<dialog id="branch-dialog" aria-labelledby="branch-title">
+<div class="sheet-header"><h2 id="branch-title">지점 검색</h2><button class="close" type="button" aria-label="지점 검색 닫기">×</button></div>
+<p class="hint">네이버에서 지점을 확인한 뒤 이름을 입력해주세요.</p>
+<label class="input-label" for="branch-query">식당·지점 이름</label>
+<input id="branch-query" class="sheet-input" placeholder="예: 밥줄 광운대점" autocomplete="organization">
+<a id="naver-search" class="naver-search" href="https://search.naver.com/" target="_blank" rel="noopener noreferrer">네이버에서 검색 ↗</a>
+<p class="sheet-error" id="branch-error" role="status"></p>
+<button class="sheet-confirm" id="branch-apply" type="button">입력 완료</button>
+</dialog>
+<dialog id="hours-dialog" aria-labelledby="hours-title">
+<div class="sheet-header"><h2 id="hours-title">영업 시간</h2><button class="close" type="button" aria-label="영업 시간 닫기">×</button></div>
+<div class="time-tabs" role="tablist" aria-label="영업 시간 구분">
+<button id="opening-tab" role="tab" aria-selected="true" aria-controls="time-panel" type="button">시작 시간 <span id="opening-value">10:00</span></button>
+<button id="closing-tab" role="tab" aria-selected="false" aria-controls="time-panel" type="button">마감 시간 <span id="closing-value">21:00</span></button>
+</div>
+<div id="time-panel" role="tabpanel" aria-labelledby="opening-tab">
+<p class="hint centered">숫자를 위아래로 굴려 시간을 맞춰주세요.</p>
+<div class="wheel-picker"><div class="selection-band"></div><div id="hour-wheel" class="wheel" role="listbox" tabindex="0" aria-label="시"></div><span class="time-colon" aria-hidden="true">:</span><div id="minute-wheel" class="wheel" role="listbox" tabindex="0" aria-label="분"></div></div>
+</div>
+<p id="time-note" class="hint centered"></p>
+<button class="sheet-confirm" id="hours-apply" type="button">선택 완료</button>
+</dialog>
+<dialog id="holidays-dialog" aria-labelledby="holidays-title">
+<div class="sheet-header"><h2 id="holidays-title">정기 휴무일</h2><button class="close" type="button" aria-label="정기 휴무일 닫기">×</button></div>
+<p class="hint">매주 쉬는 요일을 모두 선택해주세요.</p>
+<div class="days" id="days"></div>
+<button type="button" class="everyday" id="everyday" aria-pressed="false">연중무휴</button>
+<p class="sheet-error" id="holidays-error" role="status"></p>
+<button class="sheet-confirm" id="holidays-apply" type="button">선택 완료</button>
+</dialog>
+</body>
+</html>
