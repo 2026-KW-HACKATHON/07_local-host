@@ -207,8 +207,7 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
                   onPress={() => { if (active) cancelPublished(active); else { setPublishingStage((i + 1) as 1 | 2 | 3); setPage('publish'); } }}>{active ? '발행 취소' : '발행하기'}</OwnerButton>
               </View>;
             })}
-          </> : tab === 'data' ? <OwnerAnalytics key={selected.id} restaurantId={selected.id} points={reports.map(r => ({ time: r.reportedAt, level: r.level }))} tieBreak="latest"
-            emptyMessage="최근 4주에 작성한 제보가 없어요." loading={loading} error={reportsError} /> : <>
+          </> : tab === 'data' ? <OwnerAnalytics key={selected.id} restaurantId={selected.id} token={token!} refreshKey={request.current} /> : <>
             <Text style={t.title}>내 식당 정보</Text>
             <OwnerInfoRow label="정기 휴무일" value={draft ? draft.closedDays.length ? `매주 ${draft.closedDays.map(d => weekdays[d]).join('·')}요일` : '설정된 정기 휴무 없음' : '정보 확인 필요'} onPress={() => editDraft('closed')} />
             <OwnerInfoRow label="영업 시간" value={`${selected.openingTime?.slice(0, 5) ?? '미등록'} ~ ${selected.closingTime?.slice(0, 5) ?? '미등록'}`} onPress={() => setPage('hours')} />
