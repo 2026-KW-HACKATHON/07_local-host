@@ -113,3 +113,11 @@ Expo Go에서는 호스트 앱 알림 권한을 새로 요청하지 않도록 �
 검증: 390×844 설치 APK와 별도 H2 메모리 DB에서 사용자가 허용한 임시 계정으로 손님/점주 가입 및 재입력 없는 로그인을 확인했습니다. 테스트 프록시가 로그인에 한 번 503을 반환하도록 해 오류 안내 → 재시도 → 점주 홈 진입을 확인했고, 요청 로그에서 signup을 중복 호출하지 않았습니다. 나중에 로그인 시 이메일 유지/빈 비밀번호도 확인했습니다. 원래 로컬 DB는 변경하지 않았고 임시 서버는 종료했습니다. TypeScript 검사, Android Hermes 번들(이미지 포함), diff 공백 검사가 통과했습니다.
 
 Google/네이버는 최신 `origin/backend-b`(`ab36c09`)에도 인증 API가 없어 아직 연결되지 않았습니다. 제공사 앱 등록/모바일 설정과 서버 토큰 검증·신규 계정 등록 계약은 `frontend/docs/BACKEND_REQUIREMENTS.md`의 소셜 로그인 항목에 보강했습니다.
+
+## 사용자 제공 SVG 픽토그램 교체 (2026-10-08)
+
+추가 전달된 `image 2.svg`로 글자 로고를 교체하고, `home 1.svg`/`marketing 8.svg`/`point 3.svg`/`data-analytics 4.svg`/`Mask group.svg`를 홈/제보/포인트·프로모션/데이터/My·프로필에 연결했습니다. 공용 AppIcon의 집·사람 도형과 점주 하단바의 임시 막대 아이콘은 제거했습니다. 검색은 새 SVG가 없어 기존 사용자 제공 `search.png`를 유지합니다.
+
+6개 SVG 원본은 전달 파일과 SHA-256이 일치합니다. SVG에 내장된 PNG 및 마스크를 함께 4× PNG로 렌더링해 React Native Image에서 사용하며, 비율·투명도·선택 검정/비선택 흰색을 유지합니다. SVG를 직접 런타임 렌더링하는 구조는 아닙니다.
+
+실제 390×844 Android APK에서 제품의 HeaderLogo/BrandComposition/AppIcon/CustomerNavigation/OwnerNavigation을 그대로 사용하는 분리된 화면으로 검증했습니다. 손님 3개/점주 4개 탭 선택과 모든 아이콘의 활성 색상, 새 글자 로고를 확인했습니다. 백엔드 호출이나 계정 생성 없이 UI만 검증했으며 종료 후 원래 앱 연결로 복원했습니다. TypeScript 검사와 이미지 13개를 포함한 Android Hermes 번들이 통과했습니다. 백엔드 연동 범위는 변경하지 않았습니다.
