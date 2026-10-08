@@ -37,7 +37,7 @@ export function OwnerBack({ onPress, disabled }: { onPress: () => void; disabled
   return <Pressable accessibilityRole="button" accessibilityLabel="이전 화면으로 돌아가기" disabled={disabled} onPress={onPress} style={styles.back}><Text style={t.body}>‹ 뒤로</Text></Pressable>;
 }
 const styles = StyleSheet.create({
-  nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.brandYellow },
+  nav: { height: s.navigation, flexDirection: 'row', backgroundColor: c.neutralButton },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(5) },
   button: { minHeight: s.control, padding: px(12), backgroundColor: c.brandYellow, borderRadius: s.radius, alignItems: 'center', justifyContent: 'center' },
   secondary: { borderWidth: 1, borderColor: c.border }, dim: { opacity: 0.45 },

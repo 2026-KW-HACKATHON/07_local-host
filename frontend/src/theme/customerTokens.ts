@@ -9,7 +9,7 @@ export const customerColors = {
   searchText: 'rgba(0, 0, 0, 0.58)',
   divider: 'rgba(0, 0, 0, 0.35)',
   available: '#69EE30',
-  fewSeats: '#FCD325',
+  fewSeats: colors.brandYellow,
   longWait: '#EF1616',
 };
 

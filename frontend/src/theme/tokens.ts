@@ -1,10 +1,12 @@
 import { PixelRatio } from 'react-native';
 
+const yellow = '#FFDD6F';
+
 export const colors = {
   black: '#000000',
   white: '#FFFFFF',
-  brandYellow: '#FCD325',
-  onboardingYellow: '#EED451',
+  brandYellow: yellow,
+  onboardingYellow: yellow,
   neutralButton: '#D9D9D9',
   field: '#E1E0E0',
   // Figma 로그인 입력창의 텍스트: #000000, 불투명도 55%.
@@ -12,7 +14,7 @@ export const colors = {
   google: '#52C1F1',
   naver: '#8AEB01',
   primary: '#0088FF',
-  guest: '#FFEC9E',
+  guest: yellow,
   owner: '#D5EDFF',
   danger: '#D92D20',
   muted: '#666666',

@@ -54,7 +54,7 @@ export function CustomerButton({ children, onPress, disabled = false }: PropsWit
 }
 
 const styles = StyleSheet.create({
-  navigation: { height: m.navigationHeight, flexDirection: 'row', backgroundColor: c.brandYellow },
+  navigation: { height: m.navigationHeight, flexDirection: 'row', backgroundColor: c.neutralButton },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: px(4) },
   iconSlot: { width: m.iconSlot, height: m.iconSlot, alignItems: 'center', justifyContent: 'center' },
   tabLabel: { ...t.small, fontWeight: '400' },
