@@ -7,6 +7,10 @@ import bapjul.auth.dto.UserResponse;
 import bapjul.auth.exception.DuplicateUserException;
 import bapjul.auth.exception.InvalidCredentialsException;
 import bapjul.security.JwtTokenProvider;
+import bapjul.profile.UserConsent;
+import bapjul.verification.EmailVerificationService;
+import bapjul.profile.UserConsentRepository;
+import org.springframework.beans.factory.annotation.Value;
 import bapjul.user.domain.User;
 import bapjul.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,15 +24,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserConsentRepository consents;
+    private final EmailVerificationService emailVerification;
+    @Value("${bapjul.consent.enforced:false}") private boolean consentEnforced;
 
     public AuthService(
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtTokenProvider jwtTokenProvider
+            PasswordEncoder passwordEncoder,JwtTokenProvider jwtTokenProvider,UserConsentRepository consents,EmailVerificationService emailVerification
     ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
+        this.userRepository=userRepository;this.passwordEncoder=passwordEncoder;
+        this.jwtTokenProvider=jwtTokenProvider;this.consents=consents;this.emailVerification=emailVerification;
     }
 
     @Transactional
@@ -50,6 +55,13 @@ public class AuthService {
             );
         }
 
+        boolean provided=request.termsAgreed()!=null || request.privacyAgreed()!=null;
+        if((consentEnforced || provided) && (!Boolean.TRUE.equals(request.termsAgreed()) || !Boolean.TRUE.equals(request.privacyAgreed())
+            || request.termsVersion()==null || request.termsVersion().isBlank()
+            || request.privacyVersion()==null || request.privacyVersion().isBlank()))
+            throw new IllegalArgumentException("필수 약관 및 개인정보 처리 동의와 버전이 필요합니다.");
+        if(request.termsVersion()!=null && request.termsVersion().length()>30) throw new IllegalArgumentException("약관 버전이 너무 깁니다.");
+        if(request.privacyVersion()!=null && request.privacyVersion().length()>30) throw new IllegalArgumentException("개인정보 약관 버전이 너무 깁니다.");
         String encodedPassword =
                 passwordEncoder.encode(
                         request.password()
@@ -62,9 +74,12 @@ public class AuthService {
                 request.role()
         );
 
+        emailVerification.requireAndConsume(request.email());
         User saved =
                 userRepository.save(user);
 
+        if(provided || consentEnforced) consents.save(new UserConsent(saved,request.termsVersion(),request.privacyVersion(),
+                Boolean.TRUE.equals(request.marketingAgreed())));
         return toUserResponse(saved);
     }
 
@@ -122,7 +137,8 @@ public class AuthService {
                 user.getId(),
                 user.getEmail(),
                 user.getNickname(),
-                user.getRole()
+                user.getRole(),
+                user.getPhotoKey()==null?null:"/api/auth/me/photo"
         );
     }
 }

@@ -18,6 +18,12 @@ public interface CrowdSnapshotRepository
     @EntityGraph(attributePaths = {"reporter", "restaurant"})
     Page<CrowdSnapshot> findByReporter_IdOrderByObservedAtDescIdDesc(Long reporterId, Pageable pageable);
 
+    boolean existsByReporter_IdAndRestaurant_IdAndObservedAtAfter(Long reporterId,Long restaurantId,LocalDateTime cutoff);
+
+    @EntityGraph(attributePaths={"reporter","restaurant"})
+    List<CrowdSnapshot> findByRestaurant_IdAndObservedAtGreaterThanEqualOrderByObservedAtDescIdDesc(
+            Long restaurantId,LocalDateTime from);
+
     List<CrowdSnapshot>
     findByRestaurant_IdAndObservedAtBetweenOrderByObservedAtAsc(
             Long restaurantId,

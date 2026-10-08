@@ -43,11 +43,22 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public authentication routes. All other /api/auth endpoints require JWT.
+                        .requestMatchers(HttpMethod.POST,"/api/auth/email/send","/api/auth/email/verify").permitAll()
+                        .requestMatchers("/api/wallet/**","/api/coupons/**","/api/stay-proofs","/api/push/**").authenticated()
+                        .requestMatchers(HttpMethod.POST,"/api/coupon-offers/*/download").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.DELETE,"/api/coupon-offers/*").hasRole("OWNER")
+                        .requestMatchers(HttpMethod.POST,"/api/restaurants/*/coupon-offers").hasRole("OWNER")
+                        .requestMatchers("/api/coupon-offers/**").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/external/naver/places").authenticated()
+                        .requestMatchers(HttpMethod.GET,"/api/restaurants/*/coupon-offers/manage").hasRole("OWNER")
+                        .requestMatchers("/api/restaurants/*/owner/**").hasRole("OWNER")
                         // 회원가입 / 로그인
                         .requestMatchers(
                                 "/api/auth/signup",
                                 "/api/auth/login"
                         ).permitAll()
+                        .requestMatchers("/api/auth/**").authenticated()
 
                         // 개인 제보 내역은 반드시 인증 후 조회
                         .requestMatchers(HttpMethod.GET, "/api/crowd/reports/me").authenticated()

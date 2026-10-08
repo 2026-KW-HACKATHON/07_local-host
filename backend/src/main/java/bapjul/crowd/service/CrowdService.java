@@ -1,6 +1,13 @@
 package bapjul.crowd.service;
 
 import bapjul.crowd.domain.CrowdLevel;
+import bapjul.user.domain.UserRole;
+import bapjul.wallet.service.WalletService;
+import bapjul.stay.proof.StayProofService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import bapjul.restaurant.exception.RestaurantAccessDeniedException;
+import java.util.LinkedHashMap;
 import bapjul.crowd.domain.CrowdSnapshot;
 import bapjul.crowd.dto.CrowdChartPoint;
 import bapjul.crowd.dto.CrowdChartResponse;
@@ -38,15 +45,19 @@ public class CrowdService {
     private final CrowdSnapshotRepository repository;
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
+    private final WalletService walletService;
+    private final StayProofService stayProofService;
+    @Value("${bapjul.stay-proof.enforced:false}") private boolean enforceProof;
 
-    public CrowdService(
-            CrowdSnapshotRepository repository,
-            RestaurantRepository restaurantRepository,
-            UserRepository userRepository
-    ) {
-        this.repository = repository;
-        this.restaurantRepository = restaurantRepository;
-        this.userRepository = userRepository;
+    @Autowired
+    public CrowdService(CrowdSnapshotRepository repository,RestaurantRepository restaurantRepository,
+                        UserRepository userRepository,WalletService walletService,StayProofService stayProofService) {
+        this.repository=repository;this.restaurantRepository=restaurantRepository;this.userRepository=userRepository;
+        this.walletService=walletService;this.stayProofService=stayProofService;
+    }
+    // Retain existing unit-test constructor.
+    public CrowdService(CrowdSnapshotRepository repository,RestaurantRepository restaurantRepository,UserRepository userRepository) {
+        this(repository,restaurantRepository,userRepository,null,null);
     }
 
     @Transactional
@@ -78,6 +89,18 @@ public class CrowdService {
                                 )
                         );
 
+        boolean qualified=false;
+        boolean eligibleReward=false;
+        if(reporter.getRole()==UserRole.CUSTOMER) {
+            if(request.proofToken()!=null && !request.proofToken().isBlank()) {
+                stayProofService.consume(request.proofToken(),reporterEmail,restaurantId);
+                qualified=true;
+                // Serialize reports per customer so only one reward per restaurant per 30 minutes.
+                walletService.lockedCustomer(reporterEmail);
+                eligibleReward=!repository.existsByReporter_IdAndRestaurant_IdAndObservedAtAfter(
+                    reporter.getId(),restaurantId,LocalDateTime.now().minusMinutes(30));
+            } else if(enforceProof) throw new InvalidCrowdReportException("제보하려면 서버 체류 증명이 필요합니다.");
+        }
         CrowdSnapshot snapshot =
                 CrowdSnapshot.create(
                         restaurant,
@@ -85,9 +108,9 @@ public class CrowdService {
                         request.level()
                 );
 
-        CrowdSnapshot saved =
-                repository.save(snapshot);
-
+        snapshot.setDescription(request.description());
+        CrowdSnapshot saved=repository.saveAndFlush(snapshot);
+        if(qualified && eligibleReward) walletService.rewardReport(reporterEmail,saved.getId());
         return toReportResponse(saved);
     }
 
@@ -109,7 +132,7 @@ public class CrowdService {
     private CrowdReportItem toReportItem(CrowdSnapshot snapshot) {
         return new CrowdReportItem(snapshot.getId(), snapshot.getRestaurant().getId(),
                 snapshot.getRestaurant().getName(), snapshot.getReporter().getNickname(),
-                snapshot.getLevel(), snapshot.getLevel().getLabel(), snapshot.getObservedAt());
+                snapshot.getLevel(), snapshot.getLevel().getLabel(), snapshot.getObservedAt(), snapshot.getDescription());
     }
 
     public CrowdStatusResponse getCurrentStatus(

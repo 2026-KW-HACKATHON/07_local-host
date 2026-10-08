@@ -39,6 +39,8 @@ public class User {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+    @Column(name="photo_key",length=60)
+    private String photoKey;
 
     protected User() {
     }
@@ -56,6 +58,9 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
+    public String getPhotoKey(){return photoKey;}
+    public void changeNickname(String name){this.nickname=name;}
+    public void changePhoto(String key){this.photoKey=key;}
     public Long getId() {
         return id;
     }

@@ -45,6 +45,8 @@ public class CrowdSnapshot {
             nullable = false
     )
     private LocalDateTime observedAt;
+    @Column(length=500)
+    private String description;
 
     protected CrowdSnapshot() {
     }
@@ -87,6 +89,8 @@ public static CrowdSnapshot create(
             observedAt
     );
 }
+    public void setDescription(String description){this.description=description;}
+    public String getDescription(){return description;}
     public Long getId() {
         return id;
     }

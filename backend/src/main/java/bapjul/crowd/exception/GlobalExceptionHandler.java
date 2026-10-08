@@ -1,6 +1,7 @@
 package bapjul.crowd.exception;
 
 import bapjul.auth.exception.DuplicateUserException;
+import bapjul.coupon.service.CouponProblem;
 import bapjul.auth.exception.InvalidCredentialsException;
 
 import bapjul.restaurant.exception.RestaurantNotFoundException;
@@ -21,6 +22,11 @@ import bapjul.promotion.exception.PromotionNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(CouponProblem.class)
+    public ResponseEntity<Map<String,String>> coupon(CouponProblem error) {
+        return ResponseEntity.status(error.getStatus()).body(Map.of("code",error.getCode(),"message",error.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> invalidArgument(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
