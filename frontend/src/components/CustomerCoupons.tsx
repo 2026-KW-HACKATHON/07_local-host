@@ -20,7 +20,7 @@ export function CustomerPointBalance({ wallet, error, loading, onRefresh }: {
     {error ? <><Text accessibilityRole="alert" style={t.small}>{error}</Text><CustomerButton onPress={onRefresh}>다시 불러오기</CustomerButton></>
       : !wallet ? <ActivityIndicator accessibilityLabel="포인트 불러오는 중" />
         : <Text style={t.heading}>{wallet.balance.toLocaleString('ko-KR')}P</Text>}
-    <Text style={[t.small, styles.muted]}>기기 테스트 · 1P = 1원 혜택 기준</Text>
+    <Text style={[t.small, styles.muted]}>1P = 1원 혜택 기준</Text>
     {loading && wallet && <ActivityIndicator accessibilityLabel="포인트 새로고침 중" />}
   </View>;
 }
@@ -37,14 +37,13 @@ export function DownloadableCoupons({ user, promotions, wallet, now, disabled, o
     try {
       await downloadDeviceCoupon(user, promotion.id);
       await onChanged();
-      setDialog({ title: '쿠폰을 받았어요', message: 'My의 내 쿠폰함에서 확인해 주세요.\n다운로드한 시각부터 3일 동안 유효해요.', confirm: '확인' });
+      setDialog({ title: '쿠폰을 받았어요', message: 'My의 내 쿠폰함에서 확인해 주세요.\n유효기한: 다운 후 3일 이내', confirm: '확인' });
     } catch (failure) {
       setDialog({ title: '쿠폰을 받지 못했어요', message: failure instanceof Error ? failure.message : '잠시 후 다시 시도해 주세요.', confirm: '확인' });
     } finally { lock.current = false; setBusyId(null); }
   };
   const available = promotions.filter(p => isPromotionDownloadable(p, now));
   return <View style={styles.group}><Text style={t.heading}>받을 수 있는 쿠폰</Text>
-    <Text style={[t.small, styles.muted]}>이 기기에서 발행한 쿠폰 · 거리 제한 없이 다운로드</Text>
     {!available.length && <Text style={t.body}>발행 중인 쿠폰이 없어요.</Text>}
     {available.map(promotion => {
       const owned = wallet?.coupons.some(coupon => coupon.promotionId === promotion.id && !['expired', 'used'].includes(couponStatus(coupon, now)));
@@ -52,7 +51,7 @@ export function DownloadableCoupons({ user, promotions, wallet, now, disabled, o
       return <View key={promotion.id} style={styles.card}>
         <Text style={t.small}>{promotion.stage}단계 쿠폰</Text><Text style={t.heading}>{promotion.benefit}</Text>
         <Text style={t.small}>{scheduleSummary(promotion.schedule)}</Text>
-        <Text style={t.small}>{promotion.pointsCost.toLocaleString('ko-KR')}P · 받은 후 3일</Text>
+        <Text style={t.small}>{promotion.pointsCost.toLocaleString('ko-KR')}P · 유효기한: 다운 후 3일 이내</Text>
         <CustomerButton disabled={disabled || !!busyId || !wallet || owned || insufficient} onPress={() => setDialog({
           title: '쿠폰을 받을까요?', message: `${promotion.benefit}\n${promotion.pointsCost.toLocaleString('ko-KR')}P가 차감돼요.\n사용 가능 요일·시간을 확인해 주세요.`, cancel: '취소', confirm: '다운로드', onConfirm: () => { void download(promotion); },
         })}>{busyId === promotion.id ? '받는 중…' : owned ? '내 쿠폰함에 있어요' : insufficient ? '포인트가 부족해요' : '쿠폰 다운로드'}</CustomerButton>
@@ -85,7 +84,7 @@ export function CustomerCouponWallet({ user, wallet, now, disabled, onChanged }:
   return <View style={styles.group}><Text style={t.heading}>내 쿠폰함</Text>
     <View style={styles.filters}>{(['available', 'history'] as const).map(value => <Pressable key={value} accessibilityRole="tab" accessibilityState={{ selected: filter === value }}
       onPress={() => setFilter(value)} style={[styles.filter, filter === value && styles.selected]}><Text style={[t.small, filter === value && { color: c.white }]}>{value === 'available' ? '보유 쿠폰' : '사용·만료'}</Text></Pressable>)}</View>
-    <Text style={[t.small, styles.muted]}>기기 테스트 · 받은 쿠폰은 3일간 유효</Text>
+    <Text style={[t.small, styles.muted]}>유효기한: 다운 후 3일 이내</Text>
     {!coupons.length && <Text style={t.body}>{filter === 'available' ? '받은 쿠폰이 없어요.' : '사용·만료된 쿠폰이 없어요.'}</Text>}
     {coupons.map(coupon => {
       const status = couponStatus(coupon, now);

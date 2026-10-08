@@ -137,11 +137,20 @@ test('use requires confirmation and repeated taps submit only once before moving
   app.selectFilter(1); assert.match(app.text(), /사용 완료/);
 });
 
-test('point read failure is not presented as zero balance and keeps the device-test scope visible', () => {
+test('point read failure is not presented as zero balance', () => {
   let reloads = 0;
   const app = fixture('CustomerPointBalance', { wallet: wallet([], 2500), error: '저장소 확인 필요', loading: false, onRefresh: () => reloads++ });
   assert.match(app.text(), /저장소 확인 필요/);
-  assert.match(app.text(), /기기 테스트/);
+  assert.match(app.text(), /1P = 1원 혜택 기준/);
   assert.doesNotMatch(app.text(), /2,500P|0P/);
   app.button('다시 불러오기').onPress(); assert.equal(reloads, 1);
+});
+
+test('coupon UI uses the concise three-day expiry wording', () => {
+  const app = fixture('DownloadableCoupons', {
+    user: 'guest', promotions: [promotion], wallet: wallet([], 2500), now,
+    disabled: false, onChanged: async () => {},
+  });
+  assert.match(app.text(), /유효기한: 다운 후 3일 이내/);
+  assert.doesNotMatch(app.text(), /받은 후 3일|이 기기에서 발행한 쿠폰|거리 제한 없이 다운로드/);
 });

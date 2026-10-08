@@ -20,7 +20,7 @@ import { awardDeviceReportPoints } from '../coupons/deviceStore';
 import { isPromotionDownloadable } from '../coupons/model';
 import { getEligibleStayRestaurants, getStayStatus, isStayReportLink } from '../location/stayService';
 import { useStayReportPrompt } from '../location/useStayReportPrompt';
-import { activeBenefits, distanceLabel, naverSearchUrls, RESTAURANT_PAGE_SIZE, selectRestaurants, type RestaurantSort, type RestaurantSummary } from '../customer/restaurantList';
+import { activeBenefits, distanceLabel, naverSearchUrls, restaurantMapQuery, selectRestaurants, type RestaurantSummary } from '../customer/restaurantList';
 import { CustomerButton, CustomerNavigation, CustomerSearch, CrowdBadge, crowdLabels, type CustomerTab } from '../components/CustomerControls';
 import { customerColors as c, customerMetrics as m, customerType as t } from '../theme/customerTokens';
 import { metrics, px } from '../theme/tokens';
@@ -40,10 +40,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const [dialog, setDialog] = useState<CustomerDialogState | null>(null);
   const [query, setQuery] = useState('');
   const [naverQuery, setNaverQuery] = useState<string | null>(null);
-  const [sort, setSort] = useState<RestaurantSort>('거리순');
-  const [visibleCount, setVisibleCount] = useState(RESTAURANT_PAGE_SIZE);
   const [distances, setDistances] = useState<Record<string, number>>({});
-  const [sortOpen, setSortOpen] = useState(false);
   const [rows, setRows] = useState<RestaurantSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -116,8 +113,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const selectTab = (next: CustomerTab) => {
     if (reportInFlight.current) return;
     setTab(next); setQuery(''); setSelectedId(null); setShowChart(false);
-    setSortOpen(false); setShowHistory(false); setReportId(null); setLevel(null);
-    setVisibleCount(RESTAURANT_PAGE_SIZE);
+    setShowHistory(false); setReportId(null); setLevel(null);
   };
   useStayReportPrompt(() => { setNaverQuery(null); setDialog(null); selectTab('report'); });
   useEffect(() => {
@@ -133,8 +129,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
 
   const couponRows = useMemo(() => rows.map(row => ({ ...row, deviceCouponCount: coupons.promotions.filter(p =>
     p.restaurantId === row.restaurant.id && isPromotionDownloadable(p, coupons.now)).length })), [rows, coupons.promotions, coupons.now]);
-  const filtered = useMemo(() => selectRestaurants(couponRows, query, sort, distances), [couponRows, query, sort, distances]);
-  useEffect(() => { setVisibleCount(RESTAURANT_PAGE_SIZE); }, [query, sort]);
+  const filtered = useMemo(() => selectRestaurants(couponRows, query, '거리순', distances), [couponRows, query, distances]);
   const selected = rows.find(row => row.restaurant.id === selectedId);
   const reportRestaurant = rows.find(row => row.restaurant.id === reportId)?.restaurant;
   const selectedBenefits = activeBenefits(selected?.promotions ?? null);
@@ -145,8 +140,8 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       const result = await awardDeviceReportPoints(user, response);
       await coupons.refresh();
       setDialog({ title: '제보가 완료됐어요', message: result.awarded
-        ? `식당의 혼잡도를 알려주셔서 고마워요.\n+${result.awarded.toLocaleString('ko-KR')}P · 기기 테스트 적립\n현재 ${result.balance.toLocaleString('ko-KR')}P`
-        : `제보 포인트가 이미 반영됐어요.\n현재 ${result.balance.toLocaleString('ko-KR')}P · 기기 테스트`, confirm: '확인' });
+        ? `식당의 혼잡도를 알려주셔서 고마워요.\n+${result.awarded.toLocaleString('ko-KR')}P 적립\n현재 ${result.balance.toLocaleString('ko-KR')}P`
+        : `제보 포인트가 이미 반영됐어요.\n현재 ${result.balance.toLocaleString('ko-KR')}P`, confirm: '확인' });
     } catch {
       setDialog({ title: '제보는 저장됐어요', message: '포인트를 이 기기에 저장하지 못했어요. 제보를 다시 보내지 않고 적립만 다시 시도할 수 있어요.',
         cancel: '닫기', confirm: '적립 다시 시도', onConfirm: () => { void creditReport(response); } });
@@ -176,7 +171,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       cancel: '아니요', confirm: '예', onConfirm: () => { void submit(); } });
   };
   const openMap = async (restaurant: Restaurant) => {
-    await searchNaver(`${restaurant.name} ${restaurant.address}`);
+    await searchNaver(restaurantMapQuery(restaurant));
   };
   const searchNaver = async (text = query) => {
     const urls = naverSearchUrls(text);
@@ -203,7 +198,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
     <Text style={[t.small, styles.muted]}>{query.trim() ? '검색 버튼을 누르면 네이버 지도에서 더 많은 식당을 찾을 수 있어요.' : '점주가 식당을 등록하면 이곳에 표시돼요.'}</Text>
   </View>;
   const list = <>
-    {filtered.length ? filtered.slice(0, visibleCount).map(row => <Pressable key={row.restaurant.id} accessibilityRole="button"
+    {filtered.length ? filtered.map(row => <Pressable key={row.restaurant.id} accessibilityRole="button"
       accessibilityLabel={`${row.restaurant.name}, ${row.crowd ? crowdLabels[row.crowd.level] : '혼잡도 확인 실패'}`}
       onPress={() => setSelectedId(row.restaurant.id)}
       style={[styles.restaurant, reportId === row.restaurant.id && styles.selectedRestaurant]}>
@@ -212,14 +207,8 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
       <Text style={[t.small, styles.muted]}>{row.restaurant.address}</Text>
       {row.crowd ? <CrowdBadge level={row.crowd.level} /> : <Text style={t.small}>혼잡도를 불러오지 못했어요.</Text>}
       {activeBenefits(row.promotions).length > 0 && <Text style={t.small}>진행 중인 할인 혜택 {activeBenefits(row.promotions).length}개</Text>}
-      {(row.deviceCouponCount ?? 0) > 0 && <Text style={t.small}>다운로드 가능한 쿠폰 {row.deviceCouponCount}개 · 기기 테스트</Text>}
+      {(row.deviceCouponCount ?? 0) > 0 && <Text style={t.small}>다운로드 가능한 쿠폰 {row.deviceCouponCount}개</Text>}
     </Pressable>) : empty}
-    {filtered.length > 0 && <View style={styles.moreArea}>
-      <Text style={[t.small, styles.muted]}>{Math.min(visibleCount, filtered.length)} / {filtered.length}개 식당</Text>
-      {visibleCount < filtered.length && <CustomerButton onPress={() => setVisibleCount(count => count + RESTAURANT_PAGE_SIZE)}>
-        식당 {Math.min(RESTAURANT_PAGE_SIZE, filtered.length - visibleCount)}개 더 보기
-      </CustomerButton>}
-    </View>}
   </>;
   const stayPanel = <StayObservationPanel restaurants={rows.map(row => row.restaurant)} onSelect={candidate => {
     const restaurant = rows.find(row => String(row.restaurant.id) === candidate.id)?.restaurant;
@@ -232,17 +221,11 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
   const homeList = tab === 'home' && !selected;
 
   return <View style={styles.root}><KeyboardAvoidingView style={styles.shell} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-    {homeList ? <CustomerRestaurantSheet refreshing={loading || coupons.loading} onRefresh={() => { void refresh(); void coupons.refresh(); }} resetKey={`${query}|${sort}`}
+    {homeList ? <CustomerRestaurantSheet refreshing={loading || coupons.loading} onRefresh={() => { void refresh(); void coupons.refresh(); }} resetKey={query}
       header={<><View style={styles.header}><HeaderLogo /></View>
         <View style={styles.searchWrap}><CustomerSearch value={query} onChange={setQuery} onSubmit={() => { void searchNaver(); }} />
           <Text style={[t.small, styles.searchHint]}>검색하면 앱 안에서 네이버 결과를 볼 수 있어요</Text></View></>}
-      title={<><Pressable accessibilityRole="button" accessibilityLabel="식당 정렬 선택" onPress={() => setSortOpen(!sortOpen)} style={styles.panelTitle}>
-        <Text style={t.heading}>식당 둘러보기</Text><Text style={t.small}>{sort} ▾</Text></Pressable>
-        {sortOpen && <View style={styles.sortOptions}>{(['거리순', '여유순', '프로모션'] as RestaurantSort[]).map(value =>
-          <Pressable key={value} accessibilityRole="button" onPress={() => { setSort(value); setSortOpen(false); }} style={styles.sortOption}>
-            <Text style={[t.body, sort === value && styles.selectedText]}>{value}</Text>
-          </Pressable>)}</View>}</>}>
-      <Text style={[t.small, styles.listNote]}>{sort === '거리순' ? '거리가 확인된 식당부터 보여드려요. 아직 거리 정보가 없는 식당은 아래에 표시돼요.' : sort === '여유순' ? '최근 제보를 기준으로 여유 있는 식당부터 보여드려요.' : '현재 할인 혜택이나 발행된 쿠폰이 있는 식당을 보여드려요.'}</Text>
+      title={<View style={styles.panelTitle}><Text style={t.heading}>식당 둘러보기</Text></View>}>
       {error ? <View style={styles.message}><Text style={t.body}>{error}</Text><CustomerButton onPress={() => { void refresh(); }}>다시 시도</CustomerButton></View>
         : loading && !rows.length ? <ActivityIndicator color={c.black} /> : list}
     </CustomerRestaurantSheet> : <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}
@@ -329,14 +312,10 @@ const styles = StyleSheet.create({
   panel: { backgroundColor: c.panel, borderRadius: m.panelRadius, overflow: 'hidden' },
   panelTitle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: m.gutter, paddingVertical: px(12), gap: px(8) },
   searchHint: { color: c.muted, marginTop: px(8) },
-  moreArea: { padding: m.gutter, gap: px(12) },
-  listNote: { color: c.muted, paddingHorizontal: m.gutter, paddingBottom: px(12) },
   restaurant: { paddingHorizontal: m.gutter, paddingVertical: m.rowPadding, gap: px(4), borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.divider },
   rowTitle: { flexDirection: 'row', alignItems: 'center', gap: px(8) }, flexText: { flex: 1 },
   promotion: { backgroundColor: c.guest, padding: m.rowPadding, borderRadius: px(10), gap: px(8) },
   message: { padding: m.gutter, gap: m.sectionGap }, muted: { color: c.muted },
-  sortOptions: { paddingHorizontal: m.gutter, backgroundColor: c.white }, sortOption: { paddingVertical: px(12) },
-  selectedText: { textDecorationLine: 'underline' },
   statusPanel: { padding: m.rowPadding, gap: px(12) },
   reportCard: { backgroundColor: c.dialog, padding: px(20), borderRadius: px(20), gap: px(24), borderWidth: StyleSheet.hairlineWidth, borderColor: c.divider },
   levelChoices: { flexDirection: 'row', gap: px(8) },
