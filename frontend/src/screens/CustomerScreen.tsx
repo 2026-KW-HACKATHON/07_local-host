@@ -266,7 +266,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
           <View style={styles.reportCard}><Text style={[t.heading, styles.centerText]}>혼잡도를 제보해 주세요!</Text>
             <View style={styles.levelChoices}>
             {levels.map(value => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: level === value, disabled: submitting }}
-              disabled={submitting} onPress={() => setLevel(value)} style={[styles.levelOption, level === value && styles.selectedRestaurant]}>
+              disabled={submitting} onPress={() => setLevel(value)} style={({ pressed }) => [styles.levelOption, (level === value || submitting || pressed) && styles.selectedRestaurant]}>
               <View style={[styles.levelDot, { backgroundColor: value === 'AVAILABLE' ? c.available : value === 'FEW_SEATS' ? c.fewSeats : c.longWait }]} />
               <Text style={[t.small, styles.centerText]}>{crowdLabels[value]}</Text>
               <Text style={styles.choiceState}>{level === value ? '선택됨' : '선택'}</Text>
@@ -287,7 +287,7 @@ export function CustomerScreen({ onLogout }: { onLogout: () => void }) {
         </> : <>
           {user && <CustomerProfile user={user} />}
           <CustomerPointBalance wallet={coupons.wallet} error={coupons.error} loading={coupons.loading} onRefresh={() => { void coupons.refresh(); }} />
-          <View style={styles.historyActionRow}><Pressable accessibilityRole="button" onPress={() => setShowHistory(true)} style={styles.historyAction}><Text style={t.small}>내 제보 보기</Text></Pressable></View>
+          <View style={styles.historyActionRow}><Pressable accessibilityRole="button" onPress={() => setShowHistory(true)} style={({ pressed }) => [styles.historyAction, pressed && styles.selectedRestaurant]}><Text style={t.small}>내 제보 보기</Text></Pressable></View>
           {user && <CustomerCouponWallet key={`${user.id}:${user.email}`} user={user} wallet={coupons.wallet} now={coupons.now}
             disabled={coupons.loading || !!coupons.error} onChanged={coupons.refresh} />}
         </>}
@@ -315,14 +315,14 @@ const styles = StyleSheet.create({
   promotion: { backgroundColor: c.guest, padding: m.rowPadding, borderRadius: px(10), gap: px(8) },
   message: { padding: m.gutter, gap: m.sectionGap }, muted: { color: c.muted },
   statusPanel: { padding: m.rowPadding, gap: px(12) },
-  reportCard: { backgroundColor: c.dialog, padding: px(20), borderRadius: px(20), gap: px(24), borderWidth: StyleSheet.hairlineWidth, borderColor: c.divider },
+  reportCard: { backgroundColor: c.dialog, padding: px(20), borderRadius: px(20), gap: px(24) },
   levelChoices: { flexDirection: 'row', gap: px(8) },
-  levelOption: { flex: 1, minHeight: px(126), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', padding: px(8), gap: px(8), borderRadius: px(12), borderWidth: 1, borderColor: c.divider },
+  levelOption: { flex: 1, minHeight: px(126), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', padding: px(8), gap: px(8), borderRadius: px(12) },
   levelDot: { width: px(24), height: px(24), borderRadius: px(12) },
   choiceState: { ...t.small, color: c.muted }, centerText: { textAlign: 'center' },
-  selectedRestaurant: { backgroundColor: c.brandYellow, borderColor: c.black },
+  selectedRestaurant: { backgroundColor: c.neutralButton, borderBottomWidth: 0 },
   historyActionRow: { alignItems: 'flex-end', marginTop: px(-12) },
-  historyAction: { minHeight: px(44), paddingHorizontal: px(16), backgroundColor: c.brandYellow, justifyContent: 'center', borderWidth: 1, borderColor: c.divider, borderRadius: px(8) },
+  historyAction: { minHeight: px(44), paddingHorizontal: px(16), backgroundColor: c.brandYellow, justifyContent: 'center', borderRadius: px(8) },
   couponEmpty: { backgroundColor: c.guest, borderRadius: px(10), padding: m.rowPadding, gap: px(8) },
   link: { ...t.small, color: c.black, textDecorationLine: 'underline', paddingVertical: px(12) },
 });

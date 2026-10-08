@@ -16,14 +16,14 @@ export function OwnerCalendar({ value, onSelect, onClose }: { value: string; onS
     <View style={styles.grid}>{weekdays.map(day => <View style={styles.cell} key={day}><Text style={t.small}>{day}</Text></View>)}
       {cells.map((day, i) => { const valid = day > 0 && day <= count; const date = localDate(new Date(month.getFullYear(), month.getMonth(), day));
         return <Pressable key={i} disabled={!valid} accessibilityRole="button" accessibilityLabel={valid ? `${date} 선택` : undefined}
-          accessibilityState={{ selected: valid && value === date, disabled: !valid }} onPress={() => { onSelect(date); onClose(); }} style={[styles.cell, valid && value === date && styles.selected]}>
+          accessibilityState={{ selected: valid && value === date, disabled: !valid }} onPress={() => { onSelect(date); onClose(); }} style={({ pressed }) => [styles.cell, valid && (value === date || pressed) && styles.selected]}>
           <Text style={t.body}>{valid ? day : ''}</Text></Pressable>; })}</View>
-    <Pressable accessibilityRole="button" onPress={onClose} style={styles.close}><Text style={t.body}>닫기</Text></Pressable>
+    <Pressable accessibilityRole="button" onPress={onClose} style={({ pressed }) => [styles.close, pressed && styles.selected]}><Text style={t.body}>닫기</Text></Pressable>
   </View></View></Modal>;
 }
 const styles = StyleSheet.create({ backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.24)', justifyContent: 'center', alignItems: 'center', padding: px(20) },
   card: { backgroundColor: c.white, width: '100%', maxWidth: px(380), borderRadius: px(20), padding: px(12) },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, arrow: { minWidth: px(44), minHeight: px(44), alignItems: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' }, cell: { width: '14.2857%', minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(8) },
-  selected: { backgroundColor: c.brandYellow }, close: { minHeight: px(48), borderRadius: px(12), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
+  selected: { backgroundColor: c.neutralButton }, close: { minHeight: px(48), borderRadius: px(12), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
 });

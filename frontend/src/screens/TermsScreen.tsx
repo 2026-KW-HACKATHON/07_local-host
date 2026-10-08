@@ -99,6 +99,6 @@ const styles = StyleSheet.create({
   },
   termRow: { flexDirection: 'row', alignItems: 'center', minHeight: px(44), gap: px(12) },
   checkbox: { width: px(24), height: px(24), borderWidth: 1.5, borderColor: colors.muted, borderRadius: px(5), alignItems: 'center', justifyContent: 'center' },
-  checkboxChecked: { backgroundColor: colors.brandYellow, borderColor: colors.black },
+  checkboxChecked: { backgroundColor: colors.neutralButton, borderWidth: 0 },
   checkmark: { color: colors.black, fontSize: px(17), lineHeight: px(22) },
 });

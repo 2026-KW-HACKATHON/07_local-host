@@ -69,7 +69,7 @@ export function RestaurantHomeScreen({ onLogout }: { onLogout: () => void }) {
             <Text style={styles.text}>{selected.openingTime} ~ {selected.closingTime}</Text>
             <Text style={styles.text}>현재 혼잡도: {crowd?.label ?? '정보 없음'}</Text>
             <Text style={styles.text}>최근 제보 {crowd?.reportCount ?? 0}건</Text>
-            {levels.map(([level, label]) => <Pressable key={level} disabled={busy || !token} style={styles.button}
+            {levels.map(([level, label]) => <Pressable key={level} disabled={busy || !token} style={({ pressed }) => [styles.button, (busy || !token || pressed) && styles.inactive]}
               onPress={() => void mutate(() => reportCrowd(selected.id, { level }, token!))}>
               <Text style={styles.text}>{label} · 제보</Text>
             </Pressable>)}
@@ -100,4 +100,5 @@ const styles = StyleSheet.create({
   link: { fontFamily: fonts.medium, fontSize: px(18), lineHeight: px(26), color: colors.primary },
   card: { backgroundColor: colors.guest, padding: px(20), borderRadius: px(16), gap: px(12) },
   button: { backgroundColor: colors.brandYellow, padding: px(12), borderRadius: px(16) },
+  inactive: { backgroundColor: colors.neutralButton },
 });

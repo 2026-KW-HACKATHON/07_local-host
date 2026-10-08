@@ -43,7 +43,7 @@ export function OwnerAnalytics({ restaurantId, points, tieBreak = 'latest', wind
     {dataScope && <Text style={[t.small, styles.scope]}>{dataScope}</Text>}
     <View accessibilityRole="tablist" style={styles.days}>{days.map(value => <Pressable key={value}
       accessibilityRole="tab" accessibilityLabel={`${weekdays[value]}요일`} accessibilityState={{ selected: day === value }}
-      onPress={() => setDay(value)} style={[styles.day, day === value && styles.selectedDay]}>
+      onPress={() => setDay(value)} style={({ pressed }) => [styles.day, (day === value || pressed) && styles.selectedDay]}>
       <Text style={[t.body, day === value && styles.selectedDayText]}>{weekdays[value]}</Text>
     </Pressable>)}</View>
     <Text style={t.heading}>{weekdays[day]}요일 시간대별 혼잡도</Text>
@@ -87,10 +87,10 @@ const styles = StyleSheet.create({
   content: { gap: px(20) },
   periodRow: { flexDirection: 'row' },
   scope: { color: c.muted },
-  period: { paddingHorizontal: px(18), minHeight: px(44), justifyContent: 'center', borderRadius: px(12), backgroundColor: c.edit, borderWidth: 1, borderColor: c.black },
+  period: { paddingHorizontal: px(18), minHeight: px(44), justifyContent: 'center', borderRadius: px(12), backgroundColor: c.neutralButton },
   days: { flexDirection: 'row', gap: px(4) },
   day: { flex: 1, minHeight: px(44), alignItems: 'center', justifyContent: 'center', borderRadius: px(12), backgroundColor: c.brandYellow },
-  selectedDay: { backgroundColor: c.brandYellow, borderWidth: 1, borderColor: c.black },
+  selectedDay: { backgroundColor: c.neutralButton },
   selectedDayText: { color: c.black },
   chartRow: { flexDirection: 'row', gap: px(10) },
   axis: { height: px(190), paddingBottom: px(1), justifyContent: 'space-between' },

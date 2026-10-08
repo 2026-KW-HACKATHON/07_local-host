@@ -93,7 +93,7 @@ export function LoginScreen({ initialEmail = '', onLogin, onSignup, onBack }: Lo
         <SocialButton onPress={() => showSocialSetup('Google')} provider="google" />
         <SocialButton onPress={() => showSocialSetup('네이버')} provider="naver" />
       </View>
-      <Pressable accessibilityRole="button" disabled={loading} onPress={onSignup} style={styles.signupLink}>
+      <Pressable accessibilityRole="button" disabled={loading} onPress={onSignup} style={({ pressed }) => [styles.signupLink, (loading || pressed) && styles.inactive]}>
         <Text style={styles.signupText}>계정이 없으신가요? 회원가입</Text>
       </Pressable>
     </DesignScreen>
@@ -127,5 +127,6 @@ const styles = StyleSheet.create({
     gap: px(12),
   },
   signupLink: { alignSelf: 'center', marginTop: px(29), minHeight: px(44), paddingHorizontal: px(16), justifyContent: 'center', borderRadius: px(12), backgroundColor: colors.brandYellow },
+  inactive: { backgroundColor: colors.neutralButton },
   signupText: { color: colors.black, fontFamily: fonts.koreanMedium, fontSize: px(16), lineHeight: px(24) },
 });

@@ -14,7 +14,7 @@ function ClosedDaysField({ value, onChange, busy }: { value: number[]; onChange:
   return <View style={[styles.group, styles.closedGroup]}><Text style={t.body}>정기 휴무일</Text><View style={styles.days}>{weekdays.map((day, i) =>
     <Pressable key={day} accessibilityRole="checkbox" accessibilityLabel={`${day}요일 휴무`} accessibilityState={{ checked: value.includes(i), disabled: busy }} disabled={busy}
       onPress={() => onChange(value.includes(i) ? value.filter(d => d !== i) : [...value, i].sort((a, b) => a - b))}
-      style={[styles.day, value.includes(i) && styles.selected]}><Text style={t.body}>{day}</Text></Pressable>)}</View>
+      style={({ pressed }) => [styles.day, (value.includes(i) || busy || pressed) && styles.selected]}><Text style={t.body}>{day}</Text></Pressable>)}</View>
     <Text style={[t.small, styles.secondaryText]}>{value.length ? `매주 ${value.map(day => weekdays[day]).join('·')}요일 휴무` : '정기 휴무 없음'}</Text>
   </View>;
 }
@@ -107,7 +107,7 @@ export function ScheduleForm({ draft, mode, busy, onSave, restaurant }: {
       <Text style={t.body}>해당 날짜의 영업 여부를 선택해 주세요.</Text>
       <View accessibilityRole="radiogroup" style={styles.row}>{(['CLOSED', 'OPEN'] as const).map(option =>
         <Pressable key={option} accessibilityRole="radio" accessibilityLabel={option === 'CLOSED' ? '휴무' : '영업'} accessibilityState={{ checked: status === option, disabled: busy }}
-          disabled={busy} onPress={() => { setStatus(option); setError(''); }} style={[styles.scheduleOption, status === option && styles.selected]}>
+          disabled={busy} onPress={() => { setStatus(option); setError(''); }} style={({ pressed }) => [styles.scheduleOption, (status === option || busy || pressed) && styles.selected]}>
           <Text style={t.body}>{option === 'CLOSED' ? '휴무' : '영업'}</Text><Text style={t.small}>{status === option ? '선택됨' : '선택'}</Text>
         </Pressable>)}</View>
       {status === 'OPEN' && <HoursField opening={opening} closing={closing} onOpeningChange={setOpening} onClosingChange={setClosing} busy={busy} />}
@@ -118,8 +118,8 @@ export function ScheduleForm({ draft, mode, busy, onSave, restaurant }: {
   </View>;
 }
 const styles = StyleSheet.create({ form: { gap: px(24), paddingBottom: px(16) }, row: { flexDirection: 'row', gap: px(16) }, flex: { flex: 1 }, error: { ...t.small, color: c.danger },
-  group: { gap: px(12), padding: px(16), borderWidth: 1, borderColor: c.border, borderRadius: px(12) }, closedGroup: { padding: px(10) }, secondaryText: { color: c.muted },
+  group: { gap: px(12), padding: px(16), borderRadius: px(12) }, closedGroup: { padding: px(10) }, secondaryText: { color: c.muted },
   days: { flexDirection: 'row', flexWrap: 'wrap', gap: px(4) }, day: { minWidth: px(44), minHeight: px(48), borderRadius: px(10), backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center' },
   scheduleOption: { flex: 1, gap: px(4), minHeight: px(72), backgroundColor: c.brandYellow, borderRadius: px(12), alignItems: 'center', justifyContent: 'center' },
-  selected: { backgroundColor: c.edit, borderWidth: 1, borderColor: c.black },
+  selected: { backgroundColor: c.neutralButton },
 });

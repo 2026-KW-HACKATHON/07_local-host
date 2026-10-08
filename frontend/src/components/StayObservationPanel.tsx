@@ -58,6 +58,6 @@ export function StayObservationPanel({ onSelect, restaurants = [] }: { onSelect:
 }
 const styles = StyleSheet.create({
   panel: { padding: m.rowPadding, gap: m.sectionGap, backgroundColor: c.panel, borderRadius: m.panelRadius },
-  candidate: { padding: m.rowPadding, borderWidth: StyleSheet.hairlineWidth, borderColor: c.divider, borderRadius: m.searchRadius },
+  candidate: { padding: m.rowPadding, borderRadius: m.searchRadius },
   note: { color: c.muted },
 });

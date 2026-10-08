@@ -19,7 +19,7 @@ export function WelcomeScreen({
       <FigmaButton onPress={onLogin} style={styles.loginButton} textStyle={styles.loginText}>
         로그인
       </FigmaButton>
-      <Pressable accessibilityRole="button" onPress={onSignup} style={styles.signupButton}>
+      <Pressable accessibilityRole="button" onPress={onSignup} style={({ pressed }) => [styles.signupButton, pressed && styles.inactive]}>
         <Text allowFontScaling={false} style={styles.signupText}>
           회원가입
         </Text>
@@ -62,4 +62,5 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
     letterSpacing: 0,
   },
+  inactive: { backgroundColor: colors.neutralButton },
 });

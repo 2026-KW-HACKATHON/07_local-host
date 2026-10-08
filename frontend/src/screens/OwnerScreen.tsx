@@ -182,20 +182,20 @@ export function OwnerScreen({ onLogout }: { onLogout: () => void }) {
             <Text style={t.title}>사장님의{ '\n' }혼잡도 제보가 필요해요</Text>
             <View style={styles.reportCard}><Text style={[t.heading, styles.center]}>혼잡도를 제보해주세요!</Text><View style={styles.levels}>
               {levels.map((value, i) => <Pressable key={value} accessibilityRole="radio" accessibilityState={{ checked: level === value, disabled: busy }} disabled={busy}
-                onPress={() => setLevel(value)} style={[styles.level, level === value && styles.checked]}><Text style={[t.small, styles.center]}>{crowdLabels[value]}</Text>
+                onPress={() => setLevel(value)} style={({ pressed }) => [styles.level, (level === value || busy || pressed) && styles.checked]}><Text style={[t.small, styles.center]}>{crowdLabels[value]}</Text>
                 <View style={[styles.dot, { backgroundColor: [c.available, c.few, c.wait][i] }]} /><Text style={t.small}>{level === value ? '선택됨' : '선택'}</Text></Pressable>)}
             </View><OwnerField label="추가 설명 (선택)" placeholder="예) 현재 대기 3팀" value={description} onChangeText={setDescription} multiline maxLength={200} editable={!busy} /></View>
             <View style={styles.submitSpace}><OwnerButton disabled={!level || busy} onPress={submit}>{busy ? '제보 중...' : '완료'}</OwnerButton></View>
           </> : tab === 'report' ? <>
             <Text style={t.title}>가게 혼잡도 제보</Text><View style={styles.actions}>
               <Text style={[t.small, styles.offerTag]}>{activeLabels.length ? activeLabels.join('\n') : coupons.error ? '프로모션 확인 실패' : promotions === null || coupons.loading ? '프로모션 확인 중' : '진행 중인 프로모션이 없어요.'}</Text>
-              <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setLevel(null); setDescription(''); setPage('submit'); }} style={styles.reportButton}><Text style={t.body}>점주가 제보하기</Text></Pressable></View>
+              <Pressable accessibilityRole="button" disabled={busy} onPress={() => { setLevel(null); setDescription(''); setPage('submit'); }} style={({ pressed }) => [styles.reportButton, (busy || pressed) && styles.checked]}><Text style={t.body}>점주가 제보하기</Text></Pressable></View>
             <View style={styles.reportPanel}><Text style={t.heading}>최근 제보</Text><Text style={[t.small, { color: c.muted }]}>내가 작성한 제보</Text>
               {!!reportsError && <Text style={t.small}>{reportsError}</Text>}
               {reports.filter(r => r.restaurantId === selectedId).sort((a, b) => koreaObservationTime(b.reportedAt) - koreaObservationTime(a.reportedAt)).map(r => <View key={r.id} style={styles.reportRow}><Text style={t.body}>{user?.nickname} · 점주</Text><CrowdBadge level={r.level} />{!!r.description && <Text style={t.body}>{r.description}</Text>}<Text style={t.small}>{dateLabel(r.reportedAt)}</Text></View>)}
             </View>
           </> : tab === 'promotion' ? <>
-            <View style={styles.titleRow}><Text style={[t.title, styles.flex]}>프로모션</Text><Pressable accessibilityRole="button" accessibilityLabel="프로모션 수정" disabled={busy} onPress={() => editDraft('perks')} style={styles.smallAction}><Text style={t.body}>수정</Text></Pressable></View>
+            <View style={styles.titleRow}><Text style={[t.title, styles.flex]}>프로모션</Text><Pressable accessibilityRole="button" accessibilityLabel="프로모션 수정" disabled={busy} onPress={() => editDraft('perks')} style={({ pressed }) => [styles.smallAction, (busy || pressed) && styles.checked]}><Text style={t.body}>수정</Text></Pressable></View>
             {!!coupons.error && <View style={styles.errorBox}><Text style={t.small}>{coupons.error}</Text><OwnerButton secondary disabled={busy} onPress={() => { void coupons.refresh(); }}>다시 불러오기</OwnerButton></View>}
             {[0, 1, 2].map(i => {
               const active = published.find(p => p.stage === i + 1);
@@ -229,13 +229,13 @@ const styles = StyleSheet.create({
   headerAction: { minHeight: px(44), justifyContent: 'center' }, section: { paddingHorizontal: s.gutter, paddingTop: px(12), paddingBottom: px(28), gap: s.gap },
   restaurantSelector: { flexDirection: 'row', alignItems: 'center', minHeight: px(44), gap: px(12), borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.row }, flex: { flex: 1 },
   errorBox: { gap: px(12), padding: px(12), borderRadius: s.radius, backgroundColor: c.guest },
-  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: px(8) }, offerTag: { padding: px(8), borderWidth: 1, borderColor: c.border },
+  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: px(8) }, offerTag: { padding: px(8), borderRadius: px(8), backgroundColor: c.row },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: px(12) }, stage: { gap: px(10) }, stageBox: { minHeight: px(74), padding: px(16), borderRadius: s.radius, backgroundColor: c.row, justifyContent: 'center' },
-  reportButton: { minHeight: px(44), justifyContent: 'center', backgroundColor: c.brandYellow, borderRadius: px(12), padding: px(8), borderWidth: 1, borderColor: c.border },
+  reportButton: { minHeight: px(44), justifyContent: 'center', backgroundColor: c.brandYellow, borderRadius: px(12), padding: px(8) },
   reportPanel: { minHeight: px(350), backgroundColor: c.panel, padding: px(20), borderRadius: s.radius, gap: px(16) },
   reportRow: { gap: px(6), paddingVertical: px(12), borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.border },
-  reportCard: { backgroundColor: c.dialog, borderWidth: 1, borderColor: c.border, borderRadius: px(20), padding: px(14), gap: px(24) },
-  levels: { flexDirection: 'row' }, level: { flex: 1, backgroundColor: c.brandYellow, alignItems: 'center', justifyContent: 'center', paddingHorizontal: px(3), paddingVertical: px(12), gap: px(10), borderWidth: 1, borderColor: c.row },
-  checked: { backgroundColor: c.edit, borderColor: c.black }, dot: { width: px(20), height: px(20), borderRadius: px(10) }, center: { textAlign: 'center' }, submitSpace: { paddingTop: px(40) },
+  reportCard: { backgroundColor: c.dialog, borderRadius: px(20), padding: px(14), gap: px(24) },
+  levels: { flexDirection: 'row', gap: px(8) }, level: { flex: 1, backgroundColor: c.brandYellow, borderRadius: px(12), alignItems: 'center', justifyContent: 'center', paddingHorizontal: px(3), paddingVertical: px(12), gap: px(10) },
+  checked: { backgroundColor: c.neutralButton }, dot: { width: px(20), height: px(20), borderRadius: px(10) }, center: { textAlign: 'center' }, submitSpace: { paddingTop: px(40) },
   smallAction: { minHeight: px(44), minWidth: px(66), alignItems: 'center', justifyContent: 'center', borderRadius: px(8), backgroundColor: c.brandYellow, paddingHorizontal: px(12) },
 });
