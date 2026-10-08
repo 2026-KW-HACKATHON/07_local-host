@@ -23,7 +23,7 @@ import { emptyOwnerDraft, readOwnerDraft, writeOwnerDraft, type OwnerDraft } fro
 import { readOwnerReports, writeOwnerReport, type StoredOwnerReport } from '../owner/reports';
 import { koreaObservationTime } from '../owner/analytics';
 import { ownerColors as c, ownerSpace as s, ownerType as t } from '../theme/ownerTokens';
-import { metrics, px } from '../theme/tokens';
+import { fonts, metrics, px } from '../theme/tokens';
 
 type Page = 'main' | 'create' | 'hours' | 'location' | 'setupPerks' | 'perks' | 'closed' | 'notice' | 'submit' | 'publish';
 const levels: ReportableCrowdLevel[] = ['AVAILABLE', 'FEW_SEATS', 'LONG_WAIT'];
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   headerAction: { minHeight: px(44), justifyContent: 'center' }, section: { paddingHorizontal: s.gutter, paddingTop: px(12), paddingBottom: px(28), gap: s.gap },
   restaurantSelector: { flexDirection: 'row', alignItems: 'center', minHeight: px(44), gap: px(12), borderBottomWidth: StyleSheet.hairlineWidth, borderColor: c.row }, flex: { flex: 1 },
   errorBox: { gap: px(12), padding: px(12), borderRadius: s.radius, backgroundColor: c.guest },
-  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: px(8) }, offerTag: { padding: px(8), borderRadius: px(8), backgroundColor: c.row },
+  actions: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: px(8) }, offerTag: { padding: px(8), borderRadius: px(8), backgroundColor: '#2C67C5', color: c.white, fontFamily: fonts.koreanBold },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: px(12) }, stage: { gap: px(10) }, stageBox: { minHeight: px(74), padding: px(16), borderRadius: s.radius, backgroundColor: c.row, justifyContent: 'center' },
   reportButton: { minHeight: px(44), justifyContent: 'center', backgroundColor: c.brandYellow, borderRadius: px(12), padding: px(8) },
   reportPanel: { minHeight: px(350), backgroundColor: c.panel, padding: px(20), borderRadius: s.radius, gap: px(16) },
